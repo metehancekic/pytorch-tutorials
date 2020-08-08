@@ -7,4 +7,7 @@ from .preact_resnet import PreActResNet18, PreActResNet34, PreActResNet50, PreAc
 from .embedding_classification import MultiModeEmbeddingClassification, MultiModeEmbeddingMaxpooling
 
 __all__ = ["ResNet", "AttentionResNet", "ConvolutionalAttentionResNet",
-           "SpatialAttentionResNet", "ConvolutionalSpatialAttentionResNet", "VGG", "MobileNet", "MobileNetV2", "PreActResNet18", "PreActResNet34", "PreActResNet50", "PreActResNet101", "PreActResNet152", "MultiModeEmbeddingClassification"]
+           "SpatialAttentionResNet", "ConvolutionalSpatialAttentionResNet",
+           "VGG", "MobileNet", "MobileNetV2", "PreActResNet18", "PreActResNet34",
+           "PreActResNet50", "PreActResNet101", "PreActResNet152",
+           "MultiModeEmbeddingClassification"]

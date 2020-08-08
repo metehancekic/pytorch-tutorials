@@ -25,7 +25,7 @@ from deepillusion.torchattacks.analysis import whitebox_test
 
 # CIFAR10 TRAIN TEST CODES
 from models import ResNet, AttentionResNet, ConvolutionalAttentionResNet, SpatialAttentionResNet, ConvolutionalSpatialAttentionResNet, VGG, MobileNet, PreActResNet18, PreActResNet34, PreActResNet50, PreActResNet101, PreActResNet152, MobileNetV2, MultiModeEmbeddingClassification
-from train_test import adversarial_epoch, adversarial_test, randomized_epoch
+from train_test import adversarial_epoch, adversarial_test
 from parameters import get_arguments
 from read_datasets import cifar10
 

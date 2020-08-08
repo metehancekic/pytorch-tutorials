@@ -135,17 +135,6 @@ def get_arguments():
     #                      help='Init the model from checkpoint with standard parameters'
     #                      )
 
-    apex_amp = parser.add_argument_group("apex_amp", "Apex module arguments")
-    apex_amp.add_argument('--opt_level', default='O2', type=str, choices=['O0', 'O1', 'O2'],
-                          help='O0 is do nothing, O1 is Mixed Precision(MP), O2 is "Almost FP16" MP'
-                          )
-    apex_amp.add_argument('--loss_scale', default='1.0', type=str, choices=['1.0', 'dynamic'],
-                          help='If "dynamic", adaptively adjust the loss scale over time'
-                          )
-    apex_amp.add_argument('--master_weights', action='store_true',
-                          help='Maintain FP32 master weights to accompany any FP16 model weights.'
-                          )
-
     args = parser.parse_args()
 
     return args

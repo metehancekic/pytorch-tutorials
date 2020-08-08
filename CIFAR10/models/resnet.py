@@ -91,9 +91,9 @@ class ResNet(nn.Module):
         out = self.block3(out)
         out = F.leaky_relu(self.bn1(out), 0.1)
         out = F.avg_pool2d(out, out.size(-1)).squeeze()
-        out_ = self.linear(out)
+        out = self.linear(out)
 
-        return out_, out
+        return out
 
 
 class ResNetWide(nn.Module):
@@ -104,8 +104,8 @@ class ResNetWide(nn.Module):
         filters = [16, 160, 320, 640]
         strides = [1, 2, 2]
 
-        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
-                              0.2471, 0.2435, 0.2616])
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465],
+                              std=[0.2471, 0.2435, 0.2616])
         # self.norm = Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3,
