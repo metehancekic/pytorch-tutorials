@@ -44,6 +44,8 @@ def train(args, model, device, train_loader, optimizer, epoch):
         # Each iteration clean gradient values
         optimizer.zero_grad()
 
+        import ipdb; ipdb.set_trace()
+
         # Forward graph
         output = model(data)
 
