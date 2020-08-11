@@ -90,27 +90,17 @@ class PreActResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
-        out = out.view(out.size(0), -1)
+        out = F.avg_pool2d(out, out.size(-1)).squeeze()
         out = self.linear(out)
         return out
 
 
-def PreActResNet18():
-    return PreActResNet(PreActBlock, [2, 2, 2, 2])
+def PreActResNet_wrapper(num_classes=10, depth=18):
 
+    resnet_dict = {18: (PreActBlock, [2, 2, 2, 2]),
+                   34: (PreActBlock, [3, 4, 6, 3]),
+                   50: (PreActBottleneck, [3, 4, 6, 3]),
+                   101: (PreActBottleneck, [3, 4, 23, 3]),
+                   152: (PreActBottleneck, [3, 8, 36, 3])}
 
-def PreActResNet34():
-    return PreActResNet(PreActBlock, [3, 4, 6, 3])
-
-
-def PreActResNet50():
-    return PreActResNet(PreActBottleneck, [3, 4, 6, 3])
-
-
-def PreActResNet101():
-    return PreActResNet(PreActBottleneck, [3, 4, 23, 3])
-
-
-def PreActResNet152():
-    return PreActResNet(PreActBottleneck, [3, 8, 36, 3])
+    return PreActResNet(block=resnet_dict[depth][0], num_blocks=resnet_dict[depth][1], num_classes=num_classes)
