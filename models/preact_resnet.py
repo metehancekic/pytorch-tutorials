@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .tools import Normalize
+
 
 class PreActBlock(nn.Module):
     '''Pre-activation version of the BasicBlock.'''
@@ -69,6 +71,9 @@ class PreActResNet(nn.Module):
         super(PreActResNet, self).__init__()
         self.in_planes = 64
 
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+            0.2471, 0.2435, 0.2616])
+
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
@@ -85,6 +90,7 @@ class PreActResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        # out = self.norm(x)
         out = self.conv1(x)
         out = self.layer1(out)
         out = self.layer2(out)

@@ -13,11 +13,14 @@ cfg = {
 class VGG(nn.Module):
     def __init__(self, vgg_name):
         super(VGG, self).__init__()
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+            0.2471, 0.2435, 0.2616])
         self.features = self._make_layers(cfg[vgg_name])
         self.classifier = nn.Linear(512, 10)
 
     def forward(self, x):
-        out = self.features(x)
+        out = self.norm(x)
+        out = self.features(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out

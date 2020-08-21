@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .tools import Normalize
+
 
 class Block(nn.Module):
     '''Depthwise conv + Pointwise conv'''
@@ -31,6 +33,8 @@ class MobileNet(nn.Module):
 
     def __init__(self, num_classes=10):
         super(MobileNet, self).__init__()
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+            0.2471, 0.2435, 0.2616])
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_planes=32)
@@ -46,7 +50,8 @@ class MobileNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.norm(x)
+        out = F.relu(self.bn1(self.conv1(out)))
         out = self.layers(out)
         out = F.avg_pool2d(out, out.size(-1)).squeeze()
         out = self.linear(out)

@@ -96,6 +96,53 @@ class ResNet(nn.Module):
         return out
 
 
+class ResNetEmbedding(nn.Module):
+
+    def __init__(self, num_outputs=10):
+        super(ResNetEmbedding, self).__init__()
+
+        filters = [16, 16, 32, 64]
+        strides = [1, 2, 2]
+
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+            0.2471, 0.2435, 0.2616])
+
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+
+        self.block1 = self.build_block(
+            ResidualUnit, 5, filters[0], filters[1], strides[0], True)
+        self.block2 = self.build_block(
+            ResidualUnit, 5, filters[1], filters[2], strides[1], False)
+        self.block3 = self.build_block(
+            ResidualUnit, 5, filters[2], filters[3], strides[2], False)
+
+        self.bn1 = nn.BatchNorm2d(filters[3])
+
+        self.linear = nn.Linear(filters[-1], num_outputs)
+
+    def build_block(self, unit, num_units, in_channel, out_channel, stride, activate_before_residual=False):
+        layers = []
+        layers.append(unit(in_channel, out_channel,
+                           stride, activate_before_residual))
+        for i in range(num_units-1):
+            layers.append(unit(out_channel, out_channel))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+
+        out = self.norm(x)
+        out = self.conv1(out)
+        out = self.block1(out)
+        out = self.block2(out)
+        out = self.block3(out)
+        out = F.leaky_relu(self.bn1(out), 0.1)
+        embedding = F.avg_pool2d(out, out.size(-1)).squeeze()
+        out = self.linear(embedding)
+
+        return out, embedding
+
+
 class ResNetWide(nn.Module):
 
     def __init__(self, num_outputs=10):

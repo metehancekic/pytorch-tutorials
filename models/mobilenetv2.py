@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .tools import Normalize
+
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
@@ -15,6 +17,7 @@ class Block(nn.Module):
         self.stride = stride
 
         planes = expansion * in_planes
+
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
@@ -31,6 +34,7 @@ class Block(nn.Module):
                 )
 
     def forward(self, x):
+
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
@@ -51,6 +55,9 @@ class MobileNetV2(nn.Module):
     def __init__(self, num_classes=10):
         super(MobileNetV2, self).__init__()
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+            0.2471, 0.2435, 0.2616])
+
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_planes=32)
@@ -68,7 +75,8 @@ class MobileNetV2(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.norm(x)
+        out = F.relu(self.bn1(self.conv1(out)))
         out = self.layers(out)
         out = F.relu(self.bn2(self.conv2(out)))
         out = F.avg_pool2d(out, out.size(-1)).squeeze()

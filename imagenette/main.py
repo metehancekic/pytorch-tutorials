@@ -24,10 +24,10 @@ from deepillusion.torchattacks.analysis import whitebox_test
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
-from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet
-from .train_test import adversarial_epoch, adversarial_test
+from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
+from ..train_test import adversarial_epoch, adversarial_test
+from ..read_datasets import imagenette
 from .parameters import get_arguments
-from .read_datasets import imagenette
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +75,9 @@ def main():
         model = MobileNet().to(device)
     elif args.model == "MobileNetV2":
         model = MobileNetV2().to(device)
+    elif args.model == "EfficientNet":
+        model = EfficientNet.from_name(
+            "efficientnet-b0", dropout_rate=0.2).to(device)
     else:
         raise NotImplementedError
 
@@ -123,7 +126,7 @@ def main():
 
     # Checkpoint Namer
     checkpoint_name = args.model
-    if arg.model == "PreActResNet":
+    if args.model == "PreActResNet":
         checkpoint_name += str(args.depth)
     if adversarial_args["attack"]:
         checkpoint_name += "_adv_" + args.tr_attack
