@@ -4,6 +4,7 @@ import numpy as np
 
 import torch
 from torchvision import datasets, transforms
+from torch.utils.data import TensorDataset, DataLoader
 
 
 def cifar10(args):
@@ -25,7 +26,7 @@ def cifar10(args):
     trainset = datasets.CIFAR10(
         root=args.directory + 'data', train=True, download=True, transform=transform_train)
     train_loader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
+        trainset, batch_size=args.train_batch_size, shuffle=True, **kwargs)
 
     testset = datasets.CIFAR10(root=args.directory + 'data',
                                train=False, download=True, transform=transform_test)
@@ -60,6 +61,24 @@ def cifar10_black_box(args):
         tensor_data, batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     return attack_loader
+
+
+def cifar10_hard(args):
+
+    hard_dataset = np.load(args.directory + "data/hard_examples.npz")['arr_0']
+    hard_labels = np.load(args.directory + "data/hard_examples.npz")['arr_1']
+
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    kwargs = {'num_workers': 2, 'pin_memory': True} if use_cuda else {}
+
+    tensor_x = torch.Tensor(hard_dataset)  # transform to torch tensor
+    tensor_y = torch.Tensor(hard_labels).type(torch.long)
+
+    dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
+    # create your dataloader
+    hard_loader = DataLoader(dataset, batch_size=args.train_batch_size, shuffle=True, **kwargs)
+
+    return hard_loader
 
 
 def mnist(args):

@@ -41,7 +41,7 @@ def get_arguments():
                             )
 
     # Batch Sizes & #Epochs
-    neural_net.add_argument("--batch_size", type=int, default=64, metavar="N",
+    neural_net.add_argument("--train_batch_size", type=int, default=64, metavar="N",
                             help="Batch size for train",
                             )
     neural_net.add_argument("--test_batch_size", type=int, default=1000, metavar="N",
@@ -53,7 +53,7 @@ def get_arguments():
     # Adversarial training parameters
     adv_training = parser.add_argument_group("adv_training", "Adversarial training arguments")
 
-    adv_training.add_argument("-tra", "--tr_attack", type=str, default="RFGSM", metavar="fgsm/pgd",
+    adv_training.add_argument("-tra", "--tr_attack", type=str, default="Standard", metavar="fgsm/pgd",
                               help="Attack method",
                               )
     adv_training.add_argument("--tr_norm", type=str, default="inf", metavar="inf/p",

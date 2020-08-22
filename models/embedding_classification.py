@@ -55,7 +55,7 @@ class MultiModeEmbeddingMaxpooling(nn.Module):
         out, indices = self.maxpooling(out)
         out = out.squeeze()
 
-        return out, indices
+        return out  # , indices
 
     def _build_parallel_layers(self):
         """build parallel layers"""
