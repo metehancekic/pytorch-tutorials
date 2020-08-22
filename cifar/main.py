@@ -28,7 +28,7 @@ from deepillusion.torchattacks.analysis import whitebox_test
 
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, AttentionResNet, ConvolutionalAttentionResNet, SpatialAttentionResNet, MultiModeEmbeddingClassification, ConvolutionalSpatialAttentionResNet, VGG, MobileNet, MobileNetV2, PreActResNet, ResNetEmbedding
-from ..train_test import adversarial_epoch, adversarial_test
+from ..train_test import adversarial_epoch, adversarial_test, embedding_analysis
 from ..read_datasets import cifar10
 from .parameters import get_arguments
 
@@ -152,7 +152,7 @@ def main():
     else:
         model.load_state_dict(torch.load(args.directory + "checkpoints/" + checkpoint_name))
 
-        print("Clean test accuracy")
+        logger.info("Clean test accuracy")
         test_args = dict(model=model,
                          test_loader=test_loader)
         test_loss, test_acc = adversarial_test(**test_args)

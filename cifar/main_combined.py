@@ -2,7 +2,7 @@
 
 Example Run
 
-python -m pytorch-tutorials.MNIST-fashion.main --model ResNetMadry -tra RFGSM -at -Ni 7 -tr -sm
+python -m pytorch-tutorials.cifar.main_combined --model ResNetEmbedding --epochs 100 -tr -sm
 
 """
 

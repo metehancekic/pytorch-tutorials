@@ -122,19 +122,6 @@ def adversarial_test(model, test_loader, adversarial_args=None, verbose=False, p
         pred = output.argmax(dim=1, keepdim=True)
         test_correct += pred.eq(target.view_as(pred)).sum().item()
 
-        # from matplotlib import pyplot as plt
-        # cm = plt.get_cmap('gist_rainbow')
-        # plt.figure()
-        # for i in range(10):
-        #     plt.scatter(embedding.detach().cpu().numpy()[(target.detach().cpu().numpy() == i)[:, 0]][:, 0],
-        #                 embedding.detach().cpu().numpy()[(target.detach().cpu().numpy() == i)[:, 0]][:, 1], s=1, c=cm(1.*i/10))
-        # plt.figure()
-        # for i in range(10):
-        #     plt.scatter(embedding.detach().cpu().numpy()[(target.detach().cpu().numpy() == i)][:, 0],
-        #                 embedding.detach().cpu().numpy()[(target.detach().cpu().numpy() == i)][:, 1], s=1, c=cm(1.*i/10))
-        # plt.show()
-        # breakpoint()
-
     test_size = len(test_loader.dataset)
 
     return test_loss/test_size, test_correct/test_size

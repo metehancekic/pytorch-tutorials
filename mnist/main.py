@@ -171,7 +171,7 @@ def main():
     else:
         model.load_state_dict(torch.load(args.directory + "checkpoints/" + checkpoint_name))
 
-        print("Clean test accuracy")
+        logger.info("Clean test accuracy")
         test_args = dict(model=model,
                          test_loader=test_loader)
         test_loss, test_acc = adversarial_test(**test_args)

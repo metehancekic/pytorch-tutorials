@@ -43,9 +43,9 @@ def cifar10(args):
     return train_loader, test_loader
 
 
-def generate_hard_dataset():
+def generate_hard_dataset(args):
 
-    args = get_arguments()
+    # args = get_arguments()
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -99,14 +99,16 @@ def generate_hard_dataset():
 
 
 def main():
-
+    args = get_arguments()
+    # generate_hard_dataset(args)
     hard_loader = cifar10_hard(args)
     data, target = iter(hard_loader).__next__()
-    for i in range(10):
-        print(target[i])
-        plt.figure()
-        plt.imshow(data.permute(0, 2, 3, 1).detach().cpu().numpy()[i])
-    plt.show()
+    breakpoint()
+    # for i in range(10):
+    #     print(target[i])
+    #     plt.figure()
+    #     plt.imshow(data.permute(0, 2, 3, 1).detach().cpu().numpy()[i])
+    # plt.show()
 
 
 if __name__ == '__main__':
