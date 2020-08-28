@@ -2,7 +2,7 @@
 
 Example Run
 
-python -m pytorch-tutorials.MNIST-fashion.main --model ResNetMadry -tra RFGSM -at -Ni 7 -tr -sm
+python -m pytorch-tutorials.cifar.embedding_analysis --model ResNetEmbedding 
 
 """
 
@@ -13,6 +13,8 @@ import time
 import os
 from os import path
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import matplotlib
 
 
 # Torch
@@ -63,6 +65,10 @@ def embedding_analysis(model, test_loader, adversarial_args=None, verbose=False,
     else:
         iter_test_loader = test_loader
 
+    sm = torch.nn.Softmax()
+
+    all_pre_softmax = []
+    all_probabilities = []
     all_embeddings = []
     all_pred = []
     all_labels = []
@@ -80,8 +86,11 @@ def embedding_analysis(model, test_loader, adversarial_args=None, verbose=False,
 
         output, embedding = model(data)
 
+        probabilities = sm(output)
         pred = output.argmax(dim=1, keepdim=True)
 
+        all_probabilities.append(probabilities.detach().cpu().numpy())
+        all_pre_softmax.append(output.detach().cpu().numpy())
         all_embeddings.append(embedding.detach().cpu().numpy())
         all_pred.append(pred.squeeze().detach().cpu().numpy())
         all_labels.append(target.detach().cpu().numpy())
@@ -99,13 +108,120 @@ def embedding_analysis(model, test_loader, adversarial_args=None, verbose=False,
         # plt.show()
         # breakpoint()
 
+    all_probabilities = np.concatenate(tuple(all_probabilities), axis=0)
+    all_pre_softmax = np.concatenate(tuple(all_pre_softmax), axis=0)
     all_embeddings = np.concatenate(tuple(all_embeddings), axis=0)
     all_pred = np.concatenate(tuple(all_pred), axis=0)
     all_labels = np.concatenate(tuple(all_labels), axis=0)
 
     # breakpoint()
 
-    return all_embeddings, all_pred, all_labels
+    return all_pre_softmax, all_probabilities, all_embeddings, all_pred, all_labels
+
+
+def embedding_plotter(args, all_embeddings, all_pred, all_labels):
+
+    matplotlib.use('Agg')
+
+    if not os.path.exists(args.directory + 'figs'):
+        os.mkdir(args.directory + 'figs')
+
+    embedding_norms = np.linalg.norm(all_embeddings, axis=1)
+
+    # plt.figure()
+    # bins = np.linspace(0, 15, 100)
+
+    # plt.hist(embedding_norms[all_pred == all_labels], bins,
+    #          alpha=0.5, density=True, label='correct classification')
+    # plt.hist(embedding_norms[all_pred != all_labels], bins,
+    #          alpha=0.5, density=True, label='incorrect classification')
+    # plt.legend(loc='upper right')
+    # plt.savefig(args.directory + "figs/embedding_hist.pdf")
+
+    bins = np.linspace(0, 15, 100)
+
+    for i in range(10):
+        plt.figure()
+        plt.hist(embedding_norms[[a and b for a, b in zip(all_pred == all_labels, all_labels == i)]], bins,
+                 alpha=0.5, density=True, label='correct classification')
+        plt.hist(embedding_norms[[a and b for a, b in zip(all_pred != all_labels, all_labels == i)]], bins,
+                 alpha=0.5, density=True, label='incorrect classification')
+        plt.legend(loc='upper right')
+        plt.savefig(args.directory + "figs/embedding_hist_" + str(i) + ".pdf")
+
+
+def presoftmax_plotter(args, all_presoftmax, all_pred, all_labels):
+
+    matplotlib.use('Agg')
+
+    if not os.path.exists(args.directory + 'figs'):
+        os.mkdir(args.directory + 'figs')
+
+    presoftmax_mean = np.mean(all_presoftmax, axis=0)
+
+    # plt.figure()
+    # bins = np.linspace(0, 15, 100)
+
+    # plt.hist(presoftmax_norms[all_pred == all_labels], bins,
+    #          alpha=0.5, density=True, label='correct classification')
+    # plt.hist(presoftmax_norms[all_pred != all_labels], bins,
+    #          alpha=0.5, density=True, label='incorrect classification')
+    # plt.legend(loc='upper right')
+    # plt.savefig(args.directory + "figs/embedding_hist.pdf")
+
+    bins = np.linspace(0, 15, 100)
+
+    plt.figure()
+    classes = ['plane', 'car', 'bird', 'cat',
+               'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+    for i in range(10):
+        plt.subplot(2, 5, i+1)
+        plt.bar(np.arange(10), np.mean(all_presoftmax[all_labels == i], axis=0))
+        plt.title(f"Class: {classes[i]}")
+    plt.tight_layout()
+    plt.savefig(args.directory + "figs/pre_softmax.pdf")
+
+
+def calc_entropy(x, axis=1):
+    # breakpoint()
+    entropy = np.sum(-x * np.log(x), axis=axis)
+    return entropy
+
+
+def probabilities_plotter(args, all_probabilities, all_pred, all_labels):
+
+    matplotlib.use('Agg')
+
+    if not os.path.exists(args.directory + 'figs'):
+        os.mkdir(args.directory + 'figs')
+
+    bins = np.linspace(0, 2, 100)
+
+    entropy = calc_entropy(all_probabilities, axis=1)
+
+    plt.figure()
+    plt.hist(entropy, bins,
+             alpha=0.5, density=True, label='entropy')
+    plt.savefig(args.directory + "figs/entropy_hist.pdf")
+
+    plt.figure()
+    plt.hist(entropy[all_pred == all_labels], bins,
+             alpha=0.5, density=True, label='correct classification')
+    plt.hist(entropy[all_pred != all_labels], bins,
+             alpha=0.5, density=True, label='incorrect classification')
+    plt.legend(loc='upper right')
+    plt.savefig(args.directory + "figs/entropy_conditioned.pdf")
+
+
+def last_layer_analysis(model):
+
+    weight_norms = [None] * 10
+    bias_norms = [None] * 10
+    for i in range(10):
+        weight_norms[i] = np.linalg.norm(model.linear.weight.detach().cpu().numpy()[i])
+        bias_norms[i] = np.linalg.norm(model.linear.bias.detach().cpu().numpy()[i])
+    breakpoint()
 
 
 def main():
@@ -164,8 +280,12 @@ def main():
 
     test_args = dict(model=model,
                      test_loader=test_loader)
-    all_embeddings, all_pred, all_labels = embedding_analysis(**test_args)
-    breakpoint()
+    all_pre_softmax, all_probabilities, all_embeddings, all_pred, all_labels = embedding_analysis(
+        **test_args)
+    # last_layer_analysis(model)
+    presoftmax_plotter(args, all_pre_softmax, all_pred, all_labels)
+    probabilities_plotter(args, all_probabilities, all_pred, all_labels)
+    # embedding_plotter(args, all_embeddings, all_pred, all_labels)
 
 
 if __name__ == "__main__":
