@@ -27,8 +27,8 @@ from deepillusion.torchattacks.analysis import whitebox_test
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
-from ..models import ResNet, AttentionResNet, ConvolutionalAttentionResNet, SpatialAttentionResNet, MultiModeEmbeddingClassification, ConvolutionalSpatialAttentionResNet, VGG, MobileNet, MobileNetV2, PreActResNet, ResNetEmbedding
-from ..train_test import adversarial_epoch, adversarial_test, embedding_analysis
+from ..models import *
+from ..train_test import adversarial_epoch, adversarial_test  # , embedding_analysis
 from ..read_datasets import cifar10
 from .parameters import get_arguments
 
@@ -72,15 +72,15 @@ def main():
 
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])
-    print(f" Number of total trainable parameters: {params}")
+    logger.info(f" Number of total trainable parameters: {params}")
     # breakpoint()
 
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    logger.info(model)
-    logger.info("\n")
+    # logger.info(model)
+    # logger.info("\n")
 
     # Which optimizer to be used for training
     optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
@@ -143,6 +143,22 @@ def main():
             logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
             logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
+            if epoch % args.tr_attack_logging == 0:
+
+                adversarial_args_test = dict(attack=attacks[args.attack],
+                                             attack_args=dict(net=model,
+                                                              data_params=data_params,
+                                                              attack_params=attack_params,
+                                                              loss_function="cross_entropy",
+                                                              verbose=False,
+                                                              progress_bar=True))
+                test_args = dict(model=model,
+                                 test_loader=test_loader,
+                                 adversarial_args=adversarial_args_test,
+                                 verbose=True,
+                                 progress_bar=True)
+                test_loss, test_acc = adversarial_test(**test_args)
+                logger.info(f'Adversarial Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
         # Save model parameters
         if args.save_model:
             if not os.path.exists(args.directory + "checkpoints/"):
@@ -151,6 +167,7 @@ def main():
 
     else:
         model.load_state_dict(torch.load(args.directory + "checkpoints/" + checkpoint_name))
+        # model.load_state_dict(torch.load(args.directory + "checkpoints/" + "model-res-epoch76.pt"))
 
         logger.info("Clean test accuracy")
         test_args = dict(model=model,

@@ -53,7 +53,7 @@ def get_arguments():
     # Adversarial training parameters
     adv_training = parser.add_argument_group("adv_training", "Adversarial training arguments")
 
-    adv_training.add_argument("-tra", "--tr_attack", type=str, default="RFGSM", metavar="fgsm/pgd",
+    adv_training.add_argument("-tra", "--tr_attack", type=str, default="Standard", metavar="fgsm/pgd",
                               help="Attack method",
                               )
     adv_training.add_argument("--tr_norm", type=str, default="inf", metavar="inf/p",
@@ -93,7 +93,7 @@ def get_arguments():
     adv_training.add_argument("-a", "--alpha", type=float, default=(10.0/255.0),
                               metavar="", help="random fgsm budget",
                               )
-    adv_testing.add_argument("-Ss", "--step_size", type=float, default=(2.0/255.0), metavar="",
+    adv_testing.add_argument("-Ss", "--step_size", type=float, default=(1.0/255.0), metavar="",
                              help="Step size for PGD",
                              )
     adv_testing.add_argument("-Ni", "--num_iterations", type=int, default=20, metavar="",
@@ -104,6 +104,13 @@ def get_arguments():
                              )
     adv_testing.add_argument("-Nrest", "--num_restarts", type=int, default=1, metavar="",
                              help="number of restarts for pgd",
+                             )
+
+    # Defense
+    cs_frontend = parser.add_argument_group("cs_frontend", "Center surround frontend arguments")
+
+    cs_frontend.add_argument("-b", "--beta", type=float, default=1, metavar="",
+                             help="beta value for double sided relu",
                              )
 
     # Others

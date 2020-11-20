@@ -2,15 +2,18 @@
 
 Example Run
 
-python -m deep_noise_rejection.CIFAR10.main --model ResNetMadry -tra RFGSM -at -Ni 7 -tr -sm
+python -m pytorch-tutorials.MNIST-fashion.main --model ResNetMadry -tra RFGSM -at -Ni 7 -tr -sm
 
 """
+
+import numpy as np
+import logging
+from pprint import pformat
 import time
 import os
 from os import path
 from tqdm import tqdm
-import numpy as np
-import logging
+
 
 # Torch
 import torch
@@ -24,9 +27,9 @@ from deepillusion.torchattacks.analysis import whitebox_test
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
-from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
-from ..train_test import adversarial_epoch, adversarial_test, save_blackbox
-from ..read_datasets import imagenette, imagenette_black_box
+from ..models import *
+from ..train_test import adversarial_epoch, adversarial_test, cosine_epoch  # , embedding_analysis
+from ..read_datasets import cifar10
 from .parameters import get_arguments
 
 
@@ -37,6 +40,10 @@ def main():
     """ main function to run the experiments """
 
     args = get_arguments()
+
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
 
     if not os.path.exists(args.directory + 'logs'):
         os.mkdir(args.directory + 'logs')
@@ -50,37 +57,18 @@ def main():
                                 '_' + args.tr_attack + '.log'),
             logging.StreamHandler()
             ])
-    logger.info(args)
+    logger.info(pformat(vars(args)))
     logger.info("\n")
-
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    train_loader, test_loader = imagenette(args)
-    # attack_loader = imagenette_black_box(args)
+    train_loader, test_loader = cifar10(args)
     x_min = 0.0
     x_max = 1.0
 
     # Decide on which model to use
-    if args.model == "ResNet":
-        model = ResNet().to(device)
-    elif args.model == "PreActResNet":
-        model = PreActResNet(depth=args.depth).to(device)
-    elif args.model == "VGG":
-        model = VGG("VGG16").to(device)
-    elif args.model == "MobileNet":
-        model = MobileNet().to(device)
-    elif args.model == "MobileNetV2":
-        model = MobileNetV2().to(device)
-    elif args.model == "EfficientNet":
-        model = EfficientNet.from_name(
-            "efficientnet-b0", dropout_rate=0.2).to(device)
-    else:
-        raise NotImplementedError
+    model = globals()[args.model]().to(device)
 
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])
@@ -127,11 +115,9 @@ def main():
 
     # Checkpoint Namer
     checkpoint_name = args.model
-    if args.model == "PreActResNet":
-        checkpoint_name += str(args.depth)
     if adversarial_args["attack"]:
         checkpoint_name += "_adv_" + args.tr_attack
-    checkpoint_name += ".pt"
+    checkpoint_name += "cos1000.pt"
 
     # Train network if args.train is set to True (You can set that true by calling '-tr' flag, default is False)
     if args.train:
@@ -146,7 +132,7 @@ def main():
                               optimizer=optimizer,
                               scheduler=scheduler,
                               adversarial_args=adversarial_args)
-            train_loss, train_acc = adversarial_epoch(**train_args)
+            train_loss, train_acc = cosine_epoch(**train_args)
 
             test_args = dict(model=model,
                              test_loader=test_loader)
@@ -157,6 +143,23 @@ def main():
             logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
             logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
+            if epoch % args.tr_attack_logging == 0:
+
+                adversarial_args_test = dict(attack=attacks[args.attack],
+                                             attack_args=dict(net=model,
+                                                              data_params=data_params,
+                                                              attack_params=attack_params,
+                                                              loss_function="cross_entropy",
+                                                              verbose=False,
+                                                              progress_bar=True))
+                test_args = dict(model=model,
+                                 test_loader=test_loader,
+                                 adversarial_args=adversarial_args_test,
+                                 verbose=True,
+                                 progress_bar=True)
+                test_loss, test_acc = adversarial_test(**test_args)
+                logger.info(f'Adversarial Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+
         # Save model parameters
         if args.save_model:
             if not os.path.exists(args.directory + "checkpoints/"):
@@ -165,6 +168,7 @@ def main():
 
     else:
         model.load_state_dict(torch.load(args.directory + "checkpoints/" + checkpoint_name))
+        # model.load_state_dict(torch.load(args.directory + "checkpoints/" + "model-res-epoch76.pt"))
 
         logger.info("Clean test accuracy")
         test_args = dict(model=model,
@@ -200,17 +204,13 @@ def main():
                          adversarial_args=adversarial_args,
                          verbose=True,
                          progress_bar=True)
-        test_loss, test_acc = save_blackbox(**test_args)
+        test_loss, test_acc = adversarial_test(**test_args)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
-    if args.black_box:
-        attack_loader = imagenette_black_box(args)
+    # if args.black_box:
+    #     attack_loader = cifar10_black_box(args)
 
-        test_args = dict(model=model,
-                         test_loader=attack_loader)
-        test_loss, test_acc = adversarial_test(**test_args)
-        logger.info("Black Box test accuracy")
-        logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+    #     test(model, attack_loader)
 
 
 if __name__ == "__main__":

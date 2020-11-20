@@ -78,6 +78,7 @@ def main():
 
     # Define and move the model to device
     model = globals()[args.model]().to(device)
+    breakpoint()
 
     # Check the total number of trainable parameters
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())

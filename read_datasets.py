@@ -142,8 +142,8 @@ def mnist(args):
 def imagenette(args):
 
     data_dir = args.directory + "data/"
-    train_dir = path.join(data_dir, "train")
-    test_dir = path.join(data_dir, "val")
+    train_dir = data_dir + "train"
+    test_dir = data_dir + "val"
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     kwargs = {"num_workers": 2, "pin_memory": True} if use_cuda else {}
@@ -198,5 +198,29 @@ def imagenette_blackbox(args):
     attack_loader = torch.utils.data.DataLoader(
         tensor_data, batch_size=args.test_batch_size, shuffle=False, **kwargs
         )
+
+    return attack_loader
+
+
+def imagenette_black_box(args):
+    """Returns the loader for blackbox attacked test loader with given arguments."""
+
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+
+    # Read
+    test_blackbox = np.load(
+        args.directory + 'data/black_box_resnet.npz')
+
+    y_test = test_blackbox["arr_1"]
+
+    tensor_x = torch.Tensor(
+        test_blackbox["arr_0"]/np.max(test_blackbox["arr_0"]))
+    tensor_y = torch.Tensor(y_test).long()
+
+    tensor_data = torch.utils.data.TensorDataset(
+        tensor_x, tensor_y)  # create your datset
+    attack_loader = torch.utils.data.DataLoader(
+        tensor_data, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     return attack_loader

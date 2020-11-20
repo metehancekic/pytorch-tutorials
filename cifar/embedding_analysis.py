@@ -29,7 +29,7 @@ from deepillusion.torchattacks.analysis import whitebox_test
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
-from ..models import ResNet, AttentionResNet, ConvolutionalAttentionResNet, SpatialAttentionResNet, MultiModeEmbeddingClassification, ConvolutionalSpatialAttentionResNet, VGG, MobileNet, MobileNetV2, PreActResNet, ResNetEmbedding
+from ..models import *
 from ..train_test import adversarial_epoch, adversarial_test
 from ..read_datasets import cifar10
 from .parameters import get_arguments
@@ -224,6 +224,65 @@ def last_layer_analysis(model):
     breakpoint()
 
 
+def embedding_pca(args, embeddings, all_pred, all_labels):
+
+    from sklearn.decomposition import PCA
+
+    pca = PCA()
+    principalComponents = pca.fit_transform(embeddings)
+    matplotlib.use('Agg')
+    plt.figure()
+    plt.bar(np.arange(64), pca.singular_values_)
+    plt.savefig(args.directory + "figs/embedding_space.pdf")
+    # breakpoint()
+    for i in range(10):
+        pca = PCA()
+        principalComponents = pca.fit_transform(
+            embeddings[[a and b for a, b in zip(all_pred == all_labels, all_labels == i)]])
+        matplotlib.use('Agg')
+        plt.figure()
+        plt.bar(np.arange(64), pca.singular_values_)
+        plt.savefig(args.directory + f"figs/embedding_space_corrects{i}.pdf")
+
+    for i in range(10):
+        pca = PCA()
+        principalComponents = pca.fit_transform(
+            embeddings[[a and b for a, b in zip(all_pred != all_labels, all_labels == i)]])
+        matplotlib.use('Agg')
+        plt.figure()
+        try:
+            plt.bar(np.arange(64), pca.singular_values_)
+        except Exception as e:
+            breakpoint()
+        plt.savefig(args.directory + f"figs/embedding_space_incorrects{i}.pdf")
+
+
+def scatter_embeddings(args, all_embeddings, all_pred, all_labels):
+    matplotlib.use('Agg')
+    classes = ['plane', 'car', 'bird', 'cat',
+               'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+    plt.figure()
+    plt.scatter(all_embeddings[:, 0], all_embeddings[:, 1])
+    plt.savefig(args.directory + f"figs/embedding_scatters.pdf")
+
+    cm = plt.get_cmap('gist_rainbow')
+    plt.figure()
+    for i in range(10):
+        plt.scatter(all_embeddings[[all_labels == i, 0]],
+                    all_embeddings[[all_labels == i, 1]], s=1, c=cm(1.*i/10), label=classes[i])
+        plt.legend(loc='upper right')
+        plt.title("Embeddings and corresponding Labels")
+        plt.savefig(args.directory + f"figs/embedding_labels.pdf")
+    plt.figure()
+    for i in range(10):
+        plt.scatter(all_embeddings[[all_pred == i, 0]],
+                    all_embeddings[[all_pred == i, 1]], s=1, c=cm(1.*i/10), label=classes[i])
+        plt.legend(loc='upper right')
+        plt.title("Embeddings and corresponding Predictions")
+        plt.savefig(args.directory + f"figs/embedding_predictions.pdf")
+
+
 def main():
     """ main function to run the experiments """
 
@@ -283,9 +342,13 @@ def main():
     all_pre_softmax, all_probabilities, all_embeddings, all_pred, all_labels = embedding_analysis(
         **test_args)
     # last_layer_analysis(model)
-    presoftmax_plotter(args, all_pre_softmax, all_pred, all_labels)
-    probabilities_plotter(args, all_probabilities, all_pred, all_labels)
+    # presoftmax_plotter(args, all_pre_softmax, all_pred, all_labels)
+    # probabilities_plotter(args, all_probabilities, all_pred, all_labels)
     # embedding_plotter(args, all_embeddings, all_pred, all_labels)
+    # breakpoint()
+
+    # embedding_pca(args, all_embeddings, all_pred, all_labels)
+    scatter_embeddings(args, all_embeddings, all_pred, all_labels)
 
 
 if __name__ == "__main__":
