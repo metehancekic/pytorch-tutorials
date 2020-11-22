@@ -76,9 +76,9 @@ def main():
     # cs_frontend = CenterSurroundConv(beta=args.beta).to(device)
     # dog_frontend = DoGLayer(beta=args.beta).to(device)
     dog_frontend = LP_Gabor_Layer(beta=args.beta).to(device)
-    img, lbl = test_loader.__iter__().__next__()
-    img = img.to(device)
-    dog_frontend(img)
+    # img, lbl = test_loader.__iter__().__next__()
+    # img = img.to(device)
+    # dog_frontend(img)
     # breakpoint()
     CNN = ResNet().to(device)
     # model = AutoEncoder(cs_frontend, CNN).to(device)
@@ -125,7 +125,7 @@ def main():
 
     # scheduler = None
     # Checkpoint Namer
-    checkpoint_name = "LowPass_DoG_CNN_sternary_b_" + str(int(args.beta))
+    checkpoint_name = "LowPass_Gabor_CNN_sternary_b_" + str(int(args.beta))
 
     if args.train:
         logger.info("Standard training")

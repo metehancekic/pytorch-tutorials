@@ -24,8 +24,11 @@ class LP_Gabor_Layer(nn.Module):
         self.lp.weight.requires_grad = not freeze_weights
 
         self.gabor_layer = GaborConv2d(in_channels=3,
-                                       out_channels=128, kernel_size=(11, 11))
+                                       out_channels=128, padding=5, kernel_size=(11, 11))
         self.gabor_layer.calculate_weights()
+
+        self.to_img = torch.nn.Conv2d(
+            in_channels=128, out_channels=3, stride=1, kernel_size=5, padding=2, bias=False)
 
         # self.gabor_layer.weight.data =
 
@@ -34,12 +37,9 @@ class LP_Gabor_Layer(nn.Module):
         o = self.lp(x)
         o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
-
         o = self.gabor_layer(o)
-        breakpoint()
         o = take_top_coeff(o)
-        breakpoint()
-        o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=self.beta*8.0/255)
-        breakpoint()
+        o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
+        o = self.to_img(o)
 
         return o
