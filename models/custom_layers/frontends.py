@@ -39,7 +39,7 @@ class LP_Gabor_Layer(nn.Module):
         breakpoint()
         o = take_top_coeff(o)
         breakpoint()
-        o = TSQuantization(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
+        o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=self.beta*8.0/255)
         breakpoint()
 
         return o
