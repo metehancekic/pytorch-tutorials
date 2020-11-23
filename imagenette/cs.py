@@ -25,7 +25,7 @@ from deepillusion.torchattacks.analysis import whitebox_test
 
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
-from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer
+from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2
 from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs
 from ..read_datasets import imagenette, imagenette_black_box
 from .parameters import get_arguments
@@ -75,7 +75,7 @@ def main():
     x_max = 1.0
     # cs_frontend = CenterSurroundConv(beta=args.beta).to(device)
     # dog_frontend = DoGLayer(beta=args.beta).to(device)
-    dog_frontend = LP_Gabor_Layer(beta=args.beta).to(device)
+    dog_frontend = LP_Gabor_Layer_v2(beta=args.beta).to(device)
     # img, lbl = test_loader.__iter__().__next__()
     # img = img.to(device)
     # dog_frontend(img)
@@ -125,7 +125,7 @@ def main():
 
     # scheduler = None
     # Checkpoint Namer
-    checkpoint_name = "LowPass_Gabor_CNN_sternary_b_" + str(int(args.beta))
+    checkpoint_name = "LowPass_Gabor_v2_CNN_sternary_b_" + str(int(args.beta))
 
     if args.train:
         logger.info("Standard training")

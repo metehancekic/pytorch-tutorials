@@ -5,4 +5,4 @@ from .center_surround import CenterSurroundModule, CenterSurroundConv, DoGLayer,
 from .autoencoder import AutoEncoder
 from .decoders import Decoder
 from .can_tools import take_top_coeff
-from .frontends import LP_Gabor_Layer
+from .frontends import LP_Gabor_Layer, LP_Gabor_Layer_v2
