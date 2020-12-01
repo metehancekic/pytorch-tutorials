@@ -125,7 +125,7 @@ def main():
 
     # scheduler = None
     # Checkpoint Namer
-    checkpoint_name = "LowPass_Gabor_CNN_sternary_b_" + str(int(args.beta))
+    checkpoint_name = "LowPass_Gabor_CNN_bpda_sternary_b_" + str(int(args.beta))
 
     if args.train:
         logger.info("Standard training")

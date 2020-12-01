@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from ...utils import l1_normalizer, DifferenceOfGaussian2d, rgb2yrgb, rgb2y
-from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, GaborConv2d
+from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, GaborConv2d, take_top_coeff_BPDA
 
 
 class LP_Gabor_Layer(nn.Module):
@@ -75,7 +75,8 @@ class LP_Gabor_Layer_v2(nn.Module):
         o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
-        o = take_top_coeff(o)
+        # o = take_top_coeff(o)
+        o = take_top_coeff_BPDA(o)
         o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
         o = self.to_img(o)
