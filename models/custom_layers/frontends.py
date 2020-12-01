@@ -46,7 +46,7 @@ class LP_Gabor_Layer(nn.Module):
 
 
 class LP_Gabor_Layer_v2(nn.Module):
-
+    # Best
     def __init__(self, beta=1.0, freeze_weights=True):
         super().__init__()
 
