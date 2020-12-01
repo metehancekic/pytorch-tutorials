@@ -4,5 +4,5 @@ from .ternary import TQuantization, TSQuantization
 from .center_surround import CenterSurroundModule, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer
 from .autoencoder import AutoEncoder
 from .decoders import Decoder
-from .can_tools import take_top_coeff
+from .can_tools import take_top_coeff, take_top_coeff_BPDA
 from .frontends import LP_Gabor_Layer, LP_Gabor_Layer_v2
