@@ -75,7 +75,7 @@ def main():
     x_max = 1.0
     # cs_frontend = CenterSurroundConv(beta=args.beta).to(device)
     # dog_frontend = DoGLayer(beta=args.beta).to(device)
-    dog_frontend = LP_Gabor_Layer(beta=args.beta).to(device)
+    dog_frontend = LP_Gabor_Layer_v2(beta=args.beta).to(device)
     # img, lbl = test_loader.__iter__().__next__()
     # img = img.to(device)
     # dog_frontend(img)

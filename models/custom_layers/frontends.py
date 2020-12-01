@@ -76,6 +76,7 @@ class LP_Gabor_Layer_v2(nn.Module):
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         o = take_top_coeff(o)
+        o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
         o = self.to_img(o)
 
