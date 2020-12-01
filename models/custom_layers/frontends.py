@@ -78,12 +78,13 @@ class LP_Gabor_Layer_v2(nn.Module):
     def forward(self, x):
 
         o = self.lp(x)
-        o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+        if self.training:
+            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
-        # o = take_top_coeff(o)
         o = self.take_top(o)
-        o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+        if self.training:
+            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
         o = self.to_img(o)
 
