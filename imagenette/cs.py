@@ -51,7 +51,8 @@ def main():
         datefmt='%Y/%m/%d %H:%M:%S',
         level=logging.INFO,
         handlers=[
-            logging.FileHandler(args.directory + 'logs/' + "LowPassFrontEnd" + '.log'),
+            logging.FileHandler(args.directory + 'logs/' +
+                                args.frontend + "_" + args.model + '.log'),
             logging.StreamHandler()
             ])
     logger.info(args)
@@ -124,7 +125,7 @@ def main():
 
     # scheduler = None
     # Checkpoint Namer
-    checkpoint_name = "LowPass_Gabor_CNN_bpda_sternary_b_" + str(int(args.beta))
+    checkpoint_name = args.frontend + "_b_" + str(int(args.beta)) + args.model + ".pt"
 
     if args.train:
         logger.info("Standard training")
