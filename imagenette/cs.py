@@ -73,16 +73,15 @@ def main():
     train_loader, test_loader = imagenette(args)
     x_min = 0.0
     x_max = 1.0
-    # cs_frontend = CenterSurroundConv(beta=args.beta).to(device)
-    # dog_frontend = DoGLayer(beta=args.beta).to(device)
-    dog_frontend = LP_Gabor_Layer_v2(beta=args.beta).to(device)
+    # frontend = CenterSurroundConv(beta=args.beta).to(device)
+    # frontend = DoGLayer(beta=args.beta).to(device)
+    frontend = globals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
     # img, lbl = test_loader.__iter__().__next__()
     # img = img.to(device)
-    # dog_frontend(img)
+    # frontend(img)
     # breakpoint()
-    CNN = ResNet().to(device)
-    # model = AutoEncoder(cs_frontend, CNN).to(device)
-    model = AutoEncoder(dog_frontend, CNN).to(device)
+    CNN = globals()[args.model]().to(device)
+    model = AutoEncoder(frontend, CNN).to(device)
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
@@ -149,14 +148,14 @@ def main():
             logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
         # Save model parameters
-        if not os.path.exists(args.directory + "checkpoints/dog_frontends/"):
-            os.makedirs(args.directory + "checkpoints/dog_frontends/")
+        if not os.path.exists(args.directory + "checkpoints/frontends/"):
+            os.makedirs(args.directory + "checkpoints/frontends/")
         torch.save(model.state_dict(), args.directory +
-                   "checkpoints/dog_frontends/" + checkpoint_name)
+                   "checkpoints/frontends/" + checkpoint_name)
 
     else:
         model.load_state_dict(torch.load(
-            args.directory + "checkpoints/dog_frontends/" + checkpoint_name))
+            args.directory + "checkpoints/frontends/" + checkpoint_name))
 
         logger.info("Clean test accuracy")
         test_args = dict(model=model,

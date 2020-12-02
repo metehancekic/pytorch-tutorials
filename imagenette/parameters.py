@@ -17,6 +17,9 @@ def get_arguments():
     neural_net = parser.add_argument_group("neural_net", "Neural Network arguments")
 
     # Neural Model
+    neural_net.add_argument("--frontend", type=str, default="LP_Gabor_Layer", metavar="",
+                            help="Which frontend to use",
+                            )
     neural_net.add_argument("--model", type=str, default="ResNet", metavar="ResNet",
                             help="Which model to use",
                             )
@@ -104,6 +107,9 @@ def get_arguments():
                              )
     adv_testing.add_argument("-Nrest", "--num_restarts", type=int, default=1, metavar="",
                              help="number of restarts for pgd",
+                             )
+    adv_testing.add_argument("-bpda", "--bpda_type", type=str, default="maxpool_like", metavar="",
+                             help="BPDA type",
                              )
 
     # Defense
