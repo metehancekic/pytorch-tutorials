@@ -24,7 +24,7 @@ from deepillusion.torchattacks.analysis import whitebox_test
 
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
-from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3
+from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4
 from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs
 from ..read_datasets import imagenette, imagenette_black_box
 from .parameters import get_arguments
