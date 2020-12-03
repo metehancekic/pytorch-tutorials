@@ -172,6 +172,9 @@ def main():
         test_loss, test_acc = adversarial_test(**test_args)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
+    if args.analyze_network:
+        loss_landscape(model=model, data_loader=test_loader, img_index=0)
+
     if args.attack_network:
         attack_params = {
             "norm": args.norm,
