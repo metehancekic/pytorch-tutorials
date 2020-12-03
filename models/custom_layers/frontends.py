@@ -185,12 +185,12 @@ class LP_Gabor_Layer_v4(nn.Module):
         o = self.lp(x)
         if self.training:
             o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
-        o = self.ternary(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
+        o = self.ternary(o, 0, self.lp.weight, self.beta*8.0/255)
         o = self.gabor_layer(o)
         o = self.take_top(o)
         if self.training:
             o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
-        o = self.ternary(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
+        o = self.ternary(o, 0, self.gabor_layer.weight, 8.0/255)
         o = self.to_img(o)
 
         return o
