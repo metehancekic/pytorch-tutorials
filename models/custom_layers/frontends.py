@@ -169,8 +169,8 @@ class LP_Gabor_Layer_v4(nn.Module):
             in_channels=128, out_channels=3, stride=1, kernel_size=5, padding=2, bias=False)
         self.set_BPDA_type(BPDA_type)
 
-        # self.ternary = TSQuantization_BPDA().apply
-        self.ternary = TSQuantization
+        self.ternary = TSQuantization_BPDA().apply
+        # self.ternary = TSQuantization
 
     def set_BPDA_type(self, BPDA_type="maxpool_like"):
         self.BPDA_type = BPDA_type
