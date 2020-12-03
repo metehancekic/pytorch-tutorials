@@ -20,6 +20,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 # ATTACK CODES
 from deepillusion.torchattacks import FGSM, RFGSM, PGD, PGD_EOT
 from deepillusion.torchattacks.analysis import whitebox_test
+from deepillusion.torchattacks.analysis.plot import loss_landscape
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
@@ -162,6 +163,9 @@ def main():
                          test_loader=test_loader)
         test_loss, test_acc = adversarial_test(**test_args)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+
+    if args.analyze_network:
+        loss_landscape(model=model, data_loader=test_loader, img_index=0)
 
     if args.attack_network:
         attack_params = {

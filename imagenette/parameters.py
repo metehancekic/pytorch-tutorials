@@ -147,6 +147,9 @@ def get_arguments():
     actions.add_argument("-sm", "--save-model", action="store_true", default=False,
                          help="For Saving the current Model, default = False ",
                          )
+    actions.add_argument("-an", "--analyze_network", action="store_true",
+                         help="Analyze network, default = False",
+                         )
     # actions.add_argument('-im', '--initialize-model', action='store_false', default=True,
     #                      help='Init the model from checkpoint with standard parameters'
     #                      )
