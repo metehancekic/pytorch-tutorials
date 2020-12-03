@@ -16,6 +16,17 @@ def TQuantization(x, bias=0, filters=None, epsilon=8.0/255):
     return 0.5 * (torch.sign(x - bias) + torch.sign(x + bias))
 
 
+class TQuantization_BPDA(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, bias=0, filters=None, epsilon=8.0/255):
+
+        return TQuantization(x, bias, filters, epsilon)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output
+
+
 def TSQuantization(x, bias=0, filters=None, epsilon=8.0/255, steepness=100):
 
     def bias_calculator(filters, epsilon):
@@ -30,6 +41,16 @@ def TSQuantization(x, bias=0, filters=None, epsilon=8.0/255, steepness=100):
     # breakpoint()
 
     return 0.5 * (torch.tanh(steepness*(x - bias)) + torch.tanh(steepness*(x + bias)))
+
+
+class TSQuantization_BPDA(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, bias=0, filters=None, epsilon=8.0/255, steepness=100):
+        return TQuantization(x, bias, filters, epsilon, steepness)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output
 
 
 class activation_quantization_BPDA_smooth_step(torch.autograd.Function):
