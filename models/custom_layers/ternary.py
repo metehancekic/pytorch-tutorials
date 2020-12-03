@@ -24,7 +24,7 @@ class TQuantization_BPDA(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return grad_output
+        return grad_output, None, None, None
 
 
 def TSQuantization(x, bias=0, filters=None, epsilon=8.0/255, steepness=100):
@@ -50,7 +50,7 @@ class TSQuantization_BPDA(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return grad_output
+        return grad_output, None, None, None, None
 
 
 class activation_quantization_BPDA_smooth_step(torch.autograd.Function):
