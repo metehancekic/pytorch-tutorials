@@ -21,6 +21,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 # ATTACK CODES
 from deepillusion.torchattacks import FGSM, RFGSM, PGD
 from deepillusion.torchattacks.analysis import whitebox_test
+from deepillusion.torchattacks.analysis.plot import loss_landscape
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
