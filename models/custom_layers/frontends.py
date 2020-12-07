@@ -240,10 +240,10 @@ class LP_Gabor_Layer_v5(nn.Module):
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+            o = o + torch.rand_like(o, device=o.device) * 8./255 - 4./255
         o = self.take_top(o)
         if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+            o = o + torch.rand_like(o, device=o.device) * 8./255 - 4./255
         o = DTReLU(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
         o = self.to_img(o)
 
@@ -293,10 +293,10 @@ class LP_Gabor_Layer_v6(nn.Module):
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+            o = o + torch.rand_like(o, device=o.device) * 8./255 - 4./255
         o = self.take_top(o)
         if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+            o = o + torch.rand_like(o, device=o.device) * 8./255 - 4./255
         o = self.ternary(o, 0, self.gabor_layer.weight, 8.0/255)
         o = self.to_img(o)
 
