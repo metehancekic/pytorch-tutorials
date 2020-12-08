@@ -414,3 +414,40 @@ def frontend_outputs(model, test_loader):
     after_frontend = np.concatenate(tuple(after_frontend))
 
     return orig_images, before_drelu, after_drelu, after_frontend
+
+
+def frontend_analysis(model, test_loader):
+
+    model.eval()
+
+    device = model.parameters().__next__().device
+
+    orig_images = []
+    o1 = []
+    o2 = []
+    o3 = []
+    o4 = []
+    o5 = []
+    for batch_idx, (images, _) in enumerate(test_loader):
+
+        if isinstance(images, list):
+            images = images[0]
+
+        images = images.to(device)
+
+        outputs = model.analysis(images)
+        orig_images.append(images.detach().cpu().numpy())
+        o1.append(outputs[0].detach().cpu().numpy())
+        o2.append(outputs[1].detach().cpu().numpy())
+        o3.append(outputs[2].detach().cpu().numpy())
+        o4.append(outputs[3].detach().cpu().numpy())
+        o5.append(outputs[4].detach().cpu().numpy())
+
+    orig_images = np.concatenate(tuple(orig_images))
+    o1 = np.concatenate(tuple(o1))
+    o2 = np.concatenate(tuple(o2))
+    o3 = np.concatenate(tuple(o3))
+    o4 = np.concatenate(tuple(o4))
+    o5 = np.concatenate(tuple(o5))
+
+    return [orig_images, o1, o2, o3, o4, o5]

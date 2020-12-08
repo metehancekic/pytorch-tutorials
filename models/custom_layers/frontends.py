@@ -301,3 +301,13 @@ class LP_Gabor_Layer_v6(nn.Module):
         o = self.to_img(o)
 
         return o
+
+    def analysis(self, x):
+
+        o1 = self.lp(x)
+        o2 = DTReLU(o1, filters=self.lp.weight, epsilon=self.beta*8.0/255)
+        o3 = self.gabor_layer(o2)
+        o4 = self.take_top(o3)
+        o5 = self.ternary(o4, 0, self.gabor_layer.weight, 8.0/255)
+
+        return [o1, o2, o3, o4, o5]

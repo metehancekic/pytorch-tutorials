@@ -26,7 +26,7 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
 from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6
-from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs
+from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs, frontend_analysis
 from ..read_datasets import imagenette, imagenette_black_box
 from .parameters import get_arguments
 # from .gabor_trial import plot_image
@@ -166,6 +166,8 @@ def main():
 
     if args.analyze_network:
         loss_landscape(model=model, data_loader=test_loader, img_index=0)
+        outputs = frontend_analysis(model=frontend, test_loader=test_loader)
+        breakpoint()
 
     if args.attack_network:
         attack_params = {
