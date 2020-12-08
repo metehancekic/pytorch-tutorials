@@ -10,10 +10,11 @@ from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, Gabo
 
 class LP_Gabor_Layer(nn.Module):
 
-    def __init__(self, beta=1.0, BPDA_type="maxpool_like", freeze_weights=True):
+    def __init__(self, beta=1.0, BPDA_type="maxpool_like", noise_level=8.0/255, freeze_weights=True):
         super().__init__()
 
         self.beta = beta
+        self.noise_level = noise_level
 
         self.low_pass = l1_normalizer(np.ones((5, 5)))
         lp_filters = np.stack([self.low_pass, self.low_pass, self.low_pass], axis=0)
@@ -44,7 +45,7 @@ class LP_Gabor_Layer(nn.Module):
 
         o = self.lp(x)
         if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+            o = o + torch.rand_like(o, device=o.device) * self.noise_level * 2 - self.noise_level
         o = TSQuantization(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         o = self.take_top(o)
@@ -87,13 +88,13 @@ class LP_Gabor_Layer_v2(nn.Module):
     def forward(self, x):
 
         o = self.lp(x)
-        if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+        # if self.training:
+        #     o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         o = self.take_top(o)
-        if self.training:
-            o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+        # if self.training:
+        #     o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
         o = self.to_img(o)
 

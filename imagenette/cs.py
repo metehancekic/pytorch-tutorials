@@ -69,7 +69,7 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     #--------------------------------------------------#
-    #------------ Read Data and Set Model -------------#
+    #------------ Read Data and Set up Model ----------#
     #--------------------------------------------------#
     train_loader, test_loader = imagenette(args)
     x_min = 0.0
@@ -87,8 +87,8 @@ def main():
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    logger.info(model)
-    logger.info("\n")
+    # logger.info(model)
+    # logger.info("\n")
 
     # Which optimizer to be used for training
     optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
