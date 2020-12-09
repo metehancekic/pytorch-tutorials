@@ -160,6 +160,7 @@ epsilon = 8.0/255
 
 use_cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
+breakpoint()
 
 for image_index in range(10):
     # plot_image(args, images.permute(0, 2, 3, 1).numpy()[
