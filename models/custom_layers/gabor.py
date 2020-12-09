@@ -94,7 +94,7 @@ class GaborConv2d(Module):
         self.register_parameter("x_grid", self.x)
 
     def forward(self, input_tensor):
-        return F.conv2d(x, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        return F.conv2d(input_tensor, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
 
     def initialize_kernels(self):
         for i in range(self.out_channels):
