@@ -125,7 +125,7 @@ def main():
 
     # scheduler = None
     # Checkpoint Namer
-    checkpoint_name = args.frontend + "_b_" + str(int(args.beta)) + args.model + ".pt"
+    checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
 
     if args.train:
         logger.info("Standard training")
