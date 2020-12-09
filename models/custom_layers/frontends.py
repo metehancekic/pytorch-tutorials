@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from ...utils import l1_normalizer, DifferenceOfGaussian2d, rgb2yrgb, rgb2y
-from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, GaborConv2d, take_top_coeff_BPDA, TQuantization_BPDA, TSQuantization_BPDA
+from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, GaborConv2d, take_top_coeff_BPDA, TQuantization_BPDA, TSQuantization_BPDA, LowPassConv2d
 
 
 # class LP_Gabor_Layer(nn.Module):
