@@ -43,6 +43,9 @@ class LowPassConv2d(Module):
         else:
             self.bias = None
 
+        self.register_parameter("weight", self.weight)
+        # self.register_parameter("bias", self.bias)
+
     def forward(self, input_tensor):
         return F.conv2d(input_tensor, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
 

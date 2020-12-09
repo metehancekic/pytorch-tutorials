@@ -92,6 +92,8 @@ class GaborConv2d(Module):
         self.register_parameter("y_shape", self.y0)
         self.register_parameter("y_grid", self.y)
         self.register_parameter("x_grid", self.x)
+        self.register_parameter("weight", self.weight)
+        self.register_parameter("bias", self.bias)
 
     def forward(self, input_tensor):
         return F.conv2d(input_tensor, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
@@ -116,7 +118,7 @@ class GaborConv2d(Module):
         self.weight = Parameter(self.weight, requires_grad=False)
 
     def initialize_bias(self):
-        self.bias = nn.Parameter(torch.zeros((self.out_channels)), requires_grad=True)
+        self.bias = Parameter(torch.zeros((self.out_channels)), requires_grad=True)
 
     def normalize_kernels(self):
         self.weight = Parameter(self.weight /
