@@ -54,7 +54,7 @@ class LowPassConv2d(Module):
         self.weight = Parameter(self.weight, requires_grad=False)
 
     def initialize_bias(self):
-        self.bias = nn.Parameter(torch.zeros((self.out_channels)), requires_grad=True)
+        self.bias = Parameter(torch.zeros((self.out_channels)), requires_grad=True)
 
     def normalize_kernels(self):
         self.weight = Parameter(self.weight /

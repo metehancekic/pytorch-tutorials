@@ -63,7 +63,7 @@ class LP_Gabor_Layer(nn.Module):
         self.noise_level = noise_level
 
         self.lp = LowPassConv2d(in_channels=3, out_channels=3,
-                                stride=1, kernel_size=5,
+                                stride=1, kernel_size=(5, 5),
                                 padding=2, groups=3,
                                 bias=False)
 
@@ -89,7 +89,7 @@ class LP_Gabor_Layer(nn.Module):
         o = self.lp(x)
         if self.training:
             o = o + torch.rand_like(o, device=o.device) * self.noise_level * 2 - self.noise_level
-        o = TSQuantization(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
+        o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         o = self.gabor_layer(o)
         o = self.take_top(o)
         o = TSQuantization(o, filters=self.gabor_layer.weight, epsilon=8.0/255)
