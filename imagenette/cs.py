@@ -87,7 +87,7 @@ def main():
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    print(model.parameters())
+    print(list(model.parameters()))
     # logger.info(model)
     # logger.info("\n")
 
