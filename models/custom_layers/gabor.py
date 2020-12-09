@@ -93,7 +93,7 @@ class GaborConv2d(Module):
         self.register_parameter("y_grid", self.y)
         self.register_parameter("x_grid", self.x)
         self.register_parameter("weight", self.weight)
-        self.register_parameter("bias", self.bias)
+        # self.register_parameter("bias", self.bias)
 
     def forward(self, input_tensor):
         return F.conv2d(input_tensor, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
