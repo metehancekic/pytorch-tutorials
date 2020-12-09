@@ -89,7 +89,7 @@ def main():
 
     for name, param in model.named_parameters():
         if param.requires_grad:
-            print name
+            print(name)
     # logger.info(model)
     # logger.info("\n")
 
