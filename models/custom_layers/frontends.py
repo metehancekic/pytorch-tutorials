@@ -9,6 +9,10 @@ from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, Gabo
 
 
 class Identity(nn.Module):
+    def __init__(self, beta, BPDA_type):
+        self.beta = beta
+        self.BPDA_type = BPDA_type
+
     def forward(self, x):
         return x
 
