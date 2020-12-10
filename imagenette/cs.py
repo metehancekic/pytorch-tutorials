@@ -129,6 +129,8 @@ def main():
     # scheduler = None
     # Checkpoint Namer
     checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
+    if args.tr_attack != "Standard":
+        checkpoint_name = args.tr_attack + "_" + checkpoint_name
 
     if args.train:
         logger.info("Standard training")
@@ -139,7 +141,8 @@ def main():
             train_args = dict(model=model,
                               train_loader=train_loader,
                               optimizer=optimizer,
-                              scheduler=scheduler)
+                              scheduler=scheduler,
+                              adversarial_args=adversarial_args)
             train_loss, train_acc = adversarial_epoch(**train_args)
 
             test_args = dict(model=model,

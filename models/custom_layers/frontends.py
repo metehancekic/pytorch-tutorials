@@ -54,6 +54,36 @@ from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, Gabo
 
 #         return o
 
+class LP_Layer(nn.Module):
+
+    def __init__(self, beta=1.0, BPDA_type="maxpool_like", noise_level=8.0/255, freeze_weights=True):
+        super().__init__()
+
+        self.beta = beta
+        self.noise_level = noise_level
+
+        self.lp = LowPassConv2d(in_channels=3, out_channels=3,
+                                stride=1, kernel_size=(5, 5),
+                                padding=2, groups=3,
+                                bias=False)
+
+        self.set_BPDA_type(BPDA_type)
+
+    def set_BPDA_type(self, BPDA_type="maxpool_like"):
+        self.BPDA_type = BPDA_type
+        if self.BPDA_type == "maxpool_like":
+            self.take_top = take_top_coeff
+        elif self.BPDA_type == "identity":
+            self.take_top = take_top_coeff_BPDA().apply
+
+    def forward(self, x):
+
+        o = self.lp(x)
+        o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
+
+        return o
+
+
 class LP_Gabor_Layer(nn.Module):
 
     def __init__(self, beta=1.0, BPDA_type="maxpool_like", noise_level=8.0/255, freeze_weights=True):
@@ -326,8 +356,6 @@ class LP_Gabor_Layer_v6(nn.Module):
             self.take_top = take_top_coeff
         elif self.BPDA_type == "identity":
             self.take_top = take_top_coeff_BPDA().apply
-
-        # self.gabor_layer.weight.data =
 
     def forward(self, x):
 
