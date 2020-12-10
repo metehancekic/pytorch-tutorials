@@ -8,6 +8,10 @@ from ...utils import l1_normalizer, DifferenceOfGaussian2d, rgb2yrgb, rgb2y
 from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, GaborConv2d, take_top_coeff_BPDA, TQuantization_BPDA, TSQuantization_BPDA, LowPassConv2d
 
 
+class Identity(nn.Module):
+    def forward(self, x):
+        return x
+
 # class LP_Gabor_Layer(nn.Module):
 
 #     def __init__(self, beta=1.0, BPDA_type="maxpool_like", noise_level=8.0/255, freeze_weights=True):
@@ -53,6 +57,7 @@ from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, Gabo
 #         o = self.to_img(o)
 
 #         return o
+
 
 class LP_Layer(nn.Module):
 
