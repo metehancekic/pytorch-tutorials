@@ -9,7 +9,7 @@ from . import DReLU, DTReLU, TQuantization, TSQuantization, take_top_coeff, Gabo
 
 
 class Identity(nn.Module):
-    def __init__(self, beta, BPDA_type):
+    def __init__(self, beta=None, BPDA_type=None):
         super().__init__()
         self.beta = beta
         self.BPDA_type = BPDA_type
@@ -89,6 +89,8 @@ class LP_Layer(nn.Module):
     def forward(self, x):
 
         o = self.lp(x)
+        if self.training:
+            o = o + torch.rand_like(o, device=o.device) * self.noise_level * 2 - self.noise_level
         o = DTReLU(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
 
         return o

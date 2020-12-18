@@ -210,7 +210,7 @@ def imagenette_black_box(args):
 
     # Read
     test_blackbox = np.load(
-        args.directory + 'data/black_box_resnet.npz')
+        args.directory + 'data/hayda.npy')
 
     y_test = test_blackbox["arr_1"]
 
