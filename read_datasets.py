@@ -1,6 +1,7 @@
 """ Loader functions for CIFAR10 dataset including train, test, blackbox test set """
 
 import numpy as np
+from os import path
 
 import torch
 from torchvision import datasets, transforms
