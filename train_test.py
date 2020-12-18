@@ -284,6 +284,7 @@ def adversarial_test(model, test_loader, adversarial_args=None, verbose=False, p
 
         pred = output.argmax(dim=1, keepdim=False)
         test_correct += pred.eq(target.view_as(pred)).sum().item()
+    print(test_correct)
 
     test_size = len(test_loader.dataset)
 
