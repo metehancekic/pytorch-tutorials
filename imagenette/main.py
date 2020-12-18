@@ -204,8 +204,8 @@ def main():
                          adversarial_args=adversarial_args,
                          verbose=True,
                          progress_bar=True)
-        test_loss, test_acc = save_blackbox(**test_args)
-        logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
+        # test_loss, test_acc = save_blackbox(**test_args)
+        # logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
     if args.black_box:
         attack_loader = imagenette_blackbox(args)
