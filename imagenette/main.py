@@ -27,7 +27,7 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
 from ..train_test import adversarial_epoch, adversarial_test, save_blackbox
-from ..read_datasets import imagenette, imagenette_black_box
+from ..read_datasets import imagenette, imagenette_blackbox, imagenette_black_box
 from .parameters import get_arguments
 
 
@@ -208,7 +208,7 @@ def main():
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
     if args.black_box:
-        attack_loader = imagenette_black_box(args)
+        attack_loader = imagenette_blackbox(args)
 
         test_args = dict(model=model,
                          test_loader=attack_loader)

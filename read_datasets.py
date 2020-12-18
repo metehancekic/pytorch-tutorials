@@ -175,16 +175,10 @@ def imagenette_blackbox(args):
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
-    # Read
-    if args.attack_otherbox_type == "B-T":
-        filename = "B-T.npy"
-    elif args.attack_otherbox_type == "PW-T":
-        filename = "PW-T.npy"
-
-    test_blackbox = np.load(args.directory + "data/attacked_dataset/" + args.dataset + filename)
+    test_blackbox = np.load(args.directory + "data/hayda.npy")
 
     data_dir = args.directory + "data/"
-    test_dir = path.join(data_dir, "original_dataset", "imagenette2-160", "val")
+    test_dir = path.join(data_dir, "val")
     transform_test = transforms.Compose([transforms.ToTensor(), ])
     testset = datasets.ImageFolder(test_dir, transform=transform_test)
     test_loader = torch.utils.data.DataLoader(
@@ -210,7 +204,7 @@ def imagenette_black_box(args):
 
     # Read
     test_blackbox = np.load(
-        args.directory + 'data/hayda.npy')
+        args.directory + 'data/black_box_resnet.npy')
 
     y_test = test_blackbox["arr_1"]
 
