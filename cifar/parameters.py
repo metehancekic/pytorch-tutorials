@@ -17,6 +17,9 @@ def get_arguments():
     neural_net = parser.add_argument_group("neural_net", "Neural Network arguments")
 
     # Neural Model
+    neural_net.add_argument("--frontend", type=str, default="LP_Gabor_Layer", metavar="",
+                            help="Which frontend to use",
+                            )
     neural_net.add_argument("--model", type=str, default="ResNet", metavar="ResNet",
                             help="Which model to use",
                             )
@@ -111,6 +114,16 @@ def get_arguments():
     adv_testing.add_argument("-Nrest", "--num_restarts", type=int, default=1, metavar="",
                              help="number of restarts for pgd",
                              )
+    adv_testing.add_argument("-bpda", "--bpda_type", type=str, default="maxpool_like", metavar="",
+                             help="BPDA type",
+                             )
+
+    # Defense
+    cs_frontend = parser.add_argument_group("cs_frontend", "Center surround frontend arguments")
+
+    cs_frontend.add_argument("-b", "--beta", type=float, default=1, metavar="",
+                             help="beta value for double sided relu",
+                             )
 
     # Others
     others = parser.add_argument_group("others", "Other arguments")
@@ -139,6 +152,9 @@ def get_arguments():
                          )
     actions.add_argument("-sm", "--save-model", action="store_true", default=False,
                          help="For Saving the current Model, default = False ",
+                         )
+    actions.add_argument("-an", "--analyze_network", action="store_true",
+                         help="Analyze network, default = False",
                          )
     # actions.add_argument('-im', '--initialize-model', action='store_false', default=True,
     #                      help='Init the model from checkpoint with standard parameters'
