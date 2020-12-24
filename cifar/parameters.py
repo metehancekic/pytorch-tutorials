@@ -102,7 +102,7 @@ def get_arguments():
     adv_training.add_argument("-a", "--alpha", type=float, default=(10.0/255.0),
                               metavar="", help="random fgsm budget",
                               )
-    adv_testing.add_argument("-Ss", "--step_size", type=float, default=(2.0/255.0), metavar="",
+    adv_testing.add_argument("-Ss", "--step_size", type=float, default=(1.0/255.0), metavar="",
                              help="Step size for PGD",
                              )
     adv_testing.add_argument("-Ni", "--num_iterations", type=int, default=20, metavar="",

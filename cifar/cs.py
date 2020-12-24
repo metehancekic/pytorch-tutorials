@@ -206,14 +206,14 @@ def main():
         test_loss, test_acc = adversarial_test(**test_args)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
-    if args.black_box:
-        attack_loader = imagenette_black_box(args)
+    # if args.black_box:
+    #     attack_loader = imagenette_black_box(args)
 
-        test_args = dict(model=model,
-                         test_loader=attack_loader)
-        test_loss, test_acc = adversarial_test(**test_args)
-        logger.info("Black Box test accuracy")
-        logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+    #     test_args = dict(model=model,
+    #                      test_loader=attack_loader)
+    #     test_loss, test_acc = adversarial_test(**test_args)
+    #     logger.info("Black Box test accuracy")
+    #     logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
 
 if __name__ == "__main__":
