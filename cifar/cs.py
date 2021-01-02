@@ -126,9 +126,9 @@ def main():
                                              data_params=data_params,
                                              attack_params=attack_params,
                                              verbose=False))
-
+    start_time = time.time()
     NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
-
+    print(time.time()-start_time)
     # scheduler = None
     # Checkpoint Namer
     checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
@@ -145,6 +145,7 @@ def main():
 
     else:
         checkpoint_dir = args.directory + "checkpoints/frontends/" + checkpoint_name
+        print(checkpoint_dir)
         NN.load_model(checkpoint_dir=checkpoint_dir)
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model()
