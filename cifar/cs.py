@@ -140,10 +140,12 @@ def main():
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
             os.makedirs(args.directory + "checkpoints/frontends/")
-        NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+        checkpoint_dir = args.directory + "checkpoints/frontends/" + checkpoint_name
+        NN.save_model(checkpoint_dir=checkpoint_dir)
 
     else:
-        NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+        checkpoint_dir = args.directory + "checkpoints/frontends/" + checkpoint_name
+        NN.load_model(checkpoint_dir=checkpoint_dir)
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model()
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
