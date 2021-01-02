@@ -127,10 +127,10 @@ def main():
                                              attack_params=attack_params,
                                              verbose=False))
 
-    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler):
+    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
 
-        # scheduler = None
-        # Checkpoint Namer
+    # scheduler = None
+    # Checkpoint Namer
     checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
     if args.tr_attack != "Standard":
         checkpoint_name = args.tr_attack + "_" + checkpoint_name
