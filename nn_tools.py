@@ -48,7 +48,7 @@ class NeuralNetwork(object):
             start_time = time.time()
             train_loss, train_acc = single_epoch(**epoch_args)
             end_time = time.time()
-            lr = scheduler.get_lr()[0]
+            lr = self.scheduler.get_lr()[0]
             logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
             if epoch % log_interval == 0 or epoch == num_epochs:
                 test_loss, test_acc = adversarial_test(**test_args)
