@@ -122,6 +122,7 @@ def main():
         "num_steps": args.tr_num_iterations,
         "random_start": args.tr_rand,
         "num_restarts": args.tr_num_restarts,
+        "beta": args.tr_trades,
         }
 
     adversarial_args = dict(attack=attacks[args.tr_attack],
