@@ -95,7 +95,7 @@ class NeuralNetwork(object):
 
             # Adversary
             if adversarial_args and adversarial_args["attack"]:
-                adversarial_args["attack_args"]["net"] = model
+                adversarial_args["attack_args"]["net"] = self.model
                 adversarial_args["attack_args"]["x"] = data
                 adversarial_args["attack_args"]["y_true"] = target
                 perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
@@ -134,7 +134,7 @@ class NeuralNetwork(object):
 
             # Adversary
             if adversarial_args and adversarial_args["attack"]:
-                adversarial_args["attack_args"]["net"] = model
+                adversarial_args["attack_args"]["net"] = self.model
                 adversarial_args["attack_args"]["x"] = data
                 adversarial_args["attack_args"]["y_true"] = target
                 perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
