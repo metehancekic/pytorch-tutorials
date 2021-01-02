@@ -172,7 +172,7 @@ def trades_epoch(model, train_loader, optimizer, scheduler=None, adversarial_arg
         optimizer.zero_grad()
 
         # calculate robust loss
-        loss, output = trades_loss(model=.model,
+        loss, output = trades_loss(model=model,
                                    x_natural=data,
                                    y=target,
                                    optimizer=optimizer,
