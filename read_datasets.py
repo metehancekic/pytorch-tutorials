@@ -45,21 +45,18 @@ def cifar10_black_box(args):
 
     # Read
     test_blackbox = np.load(
-        args.directory + 'data/attacked_dataset/madry_AT_attack.npy')
+        args.directory + 'data/black_box_resnet.npz')
 
-    testset = datasets.CIFAR10(root=args.directory + 'data', train=False,
-                               transform=None, target_transform=None, download=False, )
-
-    y_test = np.array(testset.targets)
+    y_test = test_blackbox["arr_1"]
 
     tensor_x = torch.Tensor(
-        test_blackbox/np.max(test_blackbox)).permute(0, 3, 1, 2)
+        test_blackbox["arr_0"]/np.max(test_blackbox["arr_0"]))
     tensor_y = torch.Tensor(y_test).long()
 
     tensor_data = torch.utils.data.TensorDataset(
         tensor_x, tensor_y)  # create your datset
     attack_loader = torch.utils.data.DataLoader(
-        tensor_data, batch_size=args.test_batch_size, shuffle=True, **kwargs)
+        tensor_data, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     return attack_loader
 

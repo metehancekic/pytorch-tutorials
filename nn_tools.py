@@ -58,7 +58,7 @@ class NeuralNetwork(object):
     def load_model(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(checkpoint_dir))
 
-    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=True):
+    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=False):
 
         device = self.model.parameters().__next__().device
 
