@@ -31,8 +31,10 @@ class NeuralNetwork(object):
         self.scheduler = scheduler
 
     def train_model(self, logger, single_epoch=None, num_epochs=100, log_interval=2, adversarial_args=None):
-        if single_epoch is None:
+        if single_epoch is None or single_epoch == "Standard":
             single_epoch = self.adversarial_epoch
+        elif single_epoch == "trades":
+            single_epoch = self.trades_epoch
         logger.info("Standard training")
         logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
@@ -145,6 +147,42 @@ class NeuralNetwork(object):
             output = self.model(data)
             cross_ent = nn.CrossEntropyLoss()
             loss = cross_ent(output, target)
+            loss.backward()
+            self.optimizer.step()
+            if self.scheduler:
+                self.scheduler.step()
+
+            train_loss += loss.item() * data.size(0)
+            pred_adv = output.argmax(dim=1, keepdim=False)
+            train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
+
+        train_size = len(self.train_loader.dataset)
+
+        return train_loss/train_size, train_correct/train_size
+
+    def trades_epoch(self, adversarial_args=None):
+
+        self.model.train()
+
+        device = self.model.parameters().__next__().device
+
+        train_loss = 0
+        train_correct = 0
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data, target = data.to(device), target.to(device)
+
+            self.optimizer.zero_grad()
+
+            # calculate robust loss
+            loss, output = trades_loss(model=self.model,
+                                       x_natural=data,
+                                       y=target,
+                                       optimizer=self.optimizer,
+                                       step_size=adversarial_args["attack_args"]["attack_params"]["step_size"],
+                                       epsilon=adversarial_args["attack_args"]["attack_params"]["eps"],
+                                       perturb_steps=adversarial_args["attack_args"]["attack_params"]["num_steps"],
+                                       beta=adversarial_args["attack_args"]["attack_params"]["beta"],
+                                       distance='l_inf')
             loss.backward()
             self.optimizer.step()
             if self.scheduler:

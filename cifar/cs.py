@@ -26,7 +26,6 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 # CIFAR10 TRAIN TEST CODES
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
 from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
-from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs, frontend_analysis
 from ..nn_tools import NeuralNetwork
 from ..read_datasets import cifar10
 from .parameters import get_arguments
@@ -70,31 +69,33 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     #--------------------------------------------------#
-    #------------ Read Data and Set up Model ----------#
+    #------------------ Read Data ---------------------#
     #--------------------------------------------------#
     train_loader, test_loader = cifar10(args)
     x_min = 0.0
     x_max = 1.0
-    # frontend = CenterSurroundConv(beta=args.beta).to(device)
-    # frontend = DoGLayer(beta=args.beta).to(device)
+    data_params = {"x_min": x_min, "x_max": x_max}
+
+    #--------------------------------------------------#
+    #-------------------- Set up Model ----------------#
+    #--------------------------------------------------#
     frontend = globals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
-    # img, lbl = test_loader.__iter__().__next__()
-    # img = img.to(device)
-    # frontend(img)
-    # breakpoint()
     CNN = globals()[args.model]().to(device)
     model = AutoEncoder(frontend, CNN).to(device)
+
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            print(name)
+    # for name, param in model.named_parameters():
+    #     if param.requires_grad:
+    #         print(name)
     # logger.info(model)
     # logger.info("\n")
 
-    # Which optimizer to be used for training
+    #--------------------------------------------------#
+    #------------ Optimizer and Scheduler -------------#
+    #--------------------------------------------------#
     optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
                           weight_decay=args.weight_decay)
 
@@ -102,6 +103,10 @@ def main():
     scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=args.lr_min,
                                                   max_lr=args.lr_max, step_size_up=lr_steps/2,
                                                   step_size_down=lr_steps/2)
+
+    #--------------------------------------------------#
+    #------------ Adversarial Argumenrs ---------------#
+    #--------------------------------------------------#
 
     attacks = dict(Standard=None,
                    PGD=PGD,
@@ -119,25 +124,27 @@ def main():
         "num_restarts": args.tr_num_restarts,
         }
 
-    data_params = {"x_min": x_min, "x_max": x_max}
-
     adversarial_args = dict(attack=attacks[args.tr_attack],
                             attack_args=dict(net=model,
                                              data_params=data_params,
                                              attack_params=attack_params,
                                              verbose=False))
-    start_time = time.time()
-    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
-    print(time.time()-start_time)
-    # scheduler = None
+
     # Checkpoint Namer
     checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
     if args.tr_attack != "Standard":
         checkpoint_name = args.tr_attack + "_" + checkpoint_name
 
+    #--------------------------------------------------#
+    #------------------ Train-Test-Attack -------------#
+    #--------------------------------------------------#
+
+    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
+
     if args.train:
-        NN.train_model(logger, single_epoch=adversarial_epoch, num_epochs=args.epochs,
+        NN.train_model(logger, single_epoch="Standard", num_epochs=args.epochs,
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
+
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
             os.makedirs(args.directory + "checkpoints/frontends/")
         NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
