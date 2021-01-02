@@ -122,14 +122,14 @@ def get_arguments():
     # Others
     others = parser.add_argument_group("others", "Other arguments")
 
-    others.add_argument("--no-cuda", action="store_true", default=False,
+    others.add_argument("--no_cuda", action="store_true", default=False,
                         help="disables CUDA training"
                         )
     others.add_argument("--seed", type=int, default=1, metavar="S",
                         help="random seed (default: 1)"
                         )
-    others.add_argument("--log-interval", type=int, default=100, metavar="N",
-                        help="how many batches to wait before logging training status",
+    others.add_argument("--log_interval", type=int, default=100, metavar="N",
+                        help="how many epochs to wait before logging test results",
                         )
 
     # Actions

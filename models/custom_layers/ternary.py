@@ -53,67 +53,67 @@ class TSQuantization_BPDA(torch.autograd.Function):
         return grad_output, None, None, None, None
 
 
-class activation_quantization_BPDA_smooth_step(torch.autograd.Function):
-    steepness = 0.0
+# class activation_quantization_BPDA_smooth_step(torch.autograd.Function):
+#     steepness = 0.0
 
-    def __init__(self, steepness):
-        super(activation_quantization_BPDA_smooth_step, self).__init__()
-        activation_quantization_BPDA_smooth_step.steepness = steepness
+#     def __init__(self, steepness):
+#         super(activation_quantization_BPDA_smooth_step, self).__init__()
+#         activation_quantization_BPDA_smooth_step.steepness = steepness
 
-    @staticmethod
-    def forward(ctx, x, l1_norms, jump):
-        # x.shape: batchsize,nb_atoms,L,L
+#     @staticmethod
+#     def forward(ctx, x, l1_norms, jump):
+#         # x.shape: batchsize,nb_atoms,L,L
 
-        x = x / l1_norms.view(1, -1, 1, 1)
+#         x = x / l1_norms.view(1, -1, 1, 1)
 
-        ctx.save_for_backward(x, jump)
+#         ctx.save_for_backward(x, jump)
 
-        x = 0.5 * (torch.sign(x - jump) + torch.sign(x + jump))
+#         x = 0.5 * (torch.sign(x - jump) + torch.sign(x + jump))
 
-        x = x * l1_norms.view(1, -1, 1, 1)
+#         x = x * l1_norms.view(1, -1, 1, 1)
 
-        return x
+#         return x
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        """
-        Use this if you want an approximation of the activation quantization 
-        function in the backward pass. Uses the derivative of 
-        0.5*(tanh(bpda_steepness*(x-jump))+tanh(bpda_steepness*(x+jump)))
-        """
-        x, jump = ctx.saved_tensors
-        grad_input = None
-        steepness = activation_quantization_BPDA_smooth_step.steepness
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         """
+#         Use this if you want an approximation of the activation quantization
+#         function in the backward pass. Uses the derivative of
+#         0.5*(tanh(bpda_steepness*(x-jump))+tanh(bpda_steepness*(x+jump)))
+#         """
+#         x, jump = ctx.saved_tensors
+#         grad_input = None
+#         steepness = activation_quantization_BPDA_smooth_step.steepness
 
-        def sech(x):
-            return 1 / torch.cosh(x)
+#         def sech(x):
+#             return 1 / torch.cosh(x)
 
-        del_out_over_del_in = 0.5 * steepness * (
-            sech(steepness * (x - jump)) ** 2
-            + sech(steepness * (x + jump)) ** 2
-            )
+#         del_out_over_del_in = 0.5 * steepness * (
+#             sech(steepness * (x - jump)) ** 2
+#             + sech(steepness * (x + jump)) ** 2
+#             )
 
-        grad_input = del_out_over_del_in * grad_output
+#         grad_input = del_out_over_del_in * grad_output
 
-        return grad_input, None, None
+#         return grad_input, None, None
 
 
-class activation_quantization_BPDA_identity(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, x, l1_norms, jump):
-        # x.shape: batchsize,nb_atoms,L,L
+# class activation_quantization_BPDA_identity(torch.autograd.Function):
+#     @staticmethod
+#     def forward(ctx, x, l1_norms, jump):
+#         # x.shape: batchsize,nb_atoms,L,L
 
-        result = x / l1_norms.view(1, -1, 1, 1)
+#         result = x / l1_norms.view(1, -1, 1, 1)
 
-        result = 0.5 * (torch.sign(result - jump) + torch.sign(result + jump))
+#         result = 0.5 * (torch.sign(result - jump) + torch.sign(result + jump))
 
-        result = result * l1_norms.view(1, -1, 1, 1)
+#         result = result * l1_norms.view(1, -1, 1, 1)
 
-        return result
+#         return result
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        return grad_output, None, None
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         return grad_output, None, None
 
 
 def test_TQuantization():

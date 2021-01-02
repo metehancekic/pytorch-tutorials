@@ -27,6 +27,7 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
 from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
 from ..train_test import adversarial_epoch, adversarial_test, reconstruction_epoch, reconstruction_test, frontend_outputs, frontend_analysis
+from ..nn_tools import NeuralNetwork
 from ..read_datasets import cifar10
 from .parameters import get_arguments
 # from .gabor_trial import plot_image
@@ -126,54 +127,31 @@ def main():
                                              attack_params=attack_params,
                                              verbose=False))
 
-    # scheduler = None
-    # Checkpoint Namer
+    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler):
+
+        # scheduler = None
+        # Checkpoint Namer
     checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
     if args.tr_attack != "Standard":
         checkpoint_name = args.tr_attack + "_" + checkpoint_name
 
     if args.train:
-        logger.info("Standard training")
-        logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
-
-        for epoch in range(1, args.epochs + 1):
-            start_time = time.time()
-            train_args = dict(model=model,
-                              train_loader=train_loader,
-                              optimizer=optimizer,
-                              scheduler=scheduler,
-                              adversarial_args=adversarial_args)
-            train_loss, train_acc = adversarial_epoch(**train_args)
-
-            test_args = dict(model=model,
-                             test_loader=test_loader)
-            test_loss, test_acc = adversarial_test(**test_args)
-
-            end_time = time.time()
-            lr = scheduler.get_lr()[0]
-            logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
-            logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
-
-        # Save model parameters
+        NN.train_model(logger, single_epoch=adversarial_epoch, num_epochs=args.epochs,
+                       log_interval=args.log_interval, adversarial_args=adversarial_args)
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
             os.makedirs(args.directory + "checkpoints/frontends/")
-        torch.save(model.state_dict(), args.directory +
-                   "checkpoints/frontends/" + checkpoint_name)
+        NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
 
     else:
-        model.load_state_dict(torch.load(
-            args.directory + "checkpoints/frontends/" + checkpoint_name))
-
+        NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
         logger.info("Clean test accuracy")
-        test_args = dict(model=model,
-                         test_loader=test_loader)
-        test_loss, test_acc = adversarial_test(**test_args)
+        test_loss, test_acc = NN.eval_model()
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
-    if args.analyze_network:
-        loss_landscape(model=model, data_loader=test_loader, img_index=0)
-        outputs = frontend_analysis(model=frontend, test_loader=test_loader)
-        breakpoint()
+    # if args.analyze_network:
+    #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
+    #     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
+    #     breakpoint()
 
     if args.attack_network:
         attack_params = {
@@ -198,12 +176,7 @@ def main():
         for key in attack_params:
             logger.info(key + ': ' + str(attack_params[key]))
 
-        test_args = dict(model=model,
-                         test_loader=test_loader,
-                         adversarial_args=adversarial_args,
-                         verbose=True,
-                         progress_bar=True)
-        test_loss, test_acc = adversarial_test(**test_args)
+        test_loss, test_acc = NN.eval_model(adversarial_args=adversarial_args, progress_bar=True)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
     # if args.black_box:
