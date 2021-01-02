@@ -29,7 +29,9 @@ class NeuralNetwork(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(logger, single_epoch=self.adversarial_epoch, num_epochs=100, log_interval=2, adversarial_args=None):
+    def train_model(logger, single_epoch=None, num_epochs=100, log_interval=2, adversarial_args=None):
+        if single_epoch is None:
+            single_epoch = self.adversarial_epoch
         logger.info("Standard training")
         logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
