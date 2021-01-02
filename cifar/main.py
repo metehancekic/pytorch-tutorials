@@ -158,9 +158,9 @@ def main():
 
     else:
         NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
-        # logger.info("Clean test accuracy")
-        # test_loss, test_acc = NN.eval_model()
-        # logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+        logger.info("Clean test accuracy")
+        test_loss, test_acc = NN.eval_model()
+        logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     # if args.analyze_network:
     #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
@@ -197,7 +197,7 @@ def main():
             logger.info(key + ': ' + str(attack_params[key]))
 
         test_loss, test_acc = NN.eval_model(
-            adversarial_args=adversarial_args, progress_bar=True, save_blackbox=True)
+            adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
 
