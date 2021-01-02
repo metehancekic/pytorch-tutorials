@@ -6,6 +6,7 @@ functions:
     test: Evaluates model by computing accuracy (if attack_args is present adversarial testing)
 """
 
+import time
 from tqdm import tqdm
 import numpy as np
 
