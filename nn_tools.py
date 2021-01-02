@@ -29,7 +29,7 @@ class NeuralNetwork(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(logger, single_epoch=adversarial_epoch, num_epochs=100, log_interval=2, adversarial_args=None):
+    def train_model(logger, single_epoch=self.adversarial_epoch, num_epochs=100, log_interval=2, adversarial_args=None):
         logger.info("Standard training")
         logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
@@ -119,60 +119,41 @@ class NeuralNetwork(object):
 
         return test_loss/test_size, test_correct/test_size
 
+    def adversarial_epoch(adversarial_args=None):
 
-def adversarial_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
-    """
-    Description: Single epoch,
-        if adversarial args are present then adversarial training.
-    Input :
-        model : Neural Network               (torch.nn.Module)
-        train_loader : Data loader           (torch.utils.data.DataLoader)
-        optimizer : Optimizer                (torch.nn.optimizer)
-        scheduler: Scheduler (Optional)      (torch.optim.lr_scheduler.CyclicLR)
-        adversarial_args :
-            attack:                          (deepillusion.torchattacks)
-            attack_args:
-                attack arguments for given attack except "x" and "y_true"
-    Output:
-        train_loss : Train loss              (float)
-        train_accuracy : Train accuracy      (float)
-    """
+        self.model.train()
+        device = self.model.parameters().__next__().device
 
-    model.train()
+        train_loss = 0
+        train_correct = 0
+        for data, target in train_loader:
 
-    device = model.parameters().__next__().device
+            data, target = data.to(device), target.to(device)
 
-    train_loss = 0
-    train_correct = 0
-    for data, target in train_loader:
+            # Adversary
+            if adversarial_args and adversarial_args["attack"]:
+                adversarial_args["attack_args"]["net"] = model
+                adversarial_args["attack_args"]["x"] = data
+                adversarial_args["attack_args"]["y_true"] = target
+                perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
+                data += perturbs
 
-        data, target = data.to(device), target.to(device)
+            self.optimizer.zero_grad()
+            output = self.model(data)
+            cross_ent = nn.CrossEntropyLoss()
+            loss = cross_ent(output, target)
+            loss.backward()
+            self.optimizer.step()
+            if self.scheduler:
+                self.scheduler.step()
 
-        # Adversary
-        if adversarial_args and adversarial_args["attack"]:
-            adversarial_args["attack_args"]["net"] = model
-            adversarial_args["attack_args"]["x"] = data
-            adversarial_args["attack_args"]["y_true"] = target
-            perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
-            data += perturbs
+            train_loss += loss.item() * data.size(0)
+            pred_adv = output.argmax(dim=1, keepdim=False)
+            train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
 
-        optimizer.zero_grad()
-        output = model(data)
-        cross_ent = nn.CrossEntropyLoss()
-        loss = cross_ent(output, target)
-        loss.backward()
-        optimizer.step()
-        if scheduler:
-            scheduler.step()
+        train_size = len(self.train_loader.dataset)
 
-        train_loss += loss.item() * data.size(0)
-        pred_adv = output.argmax(dim=1, keepdim=False)
-        train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
-        # breakpoint()
-
-    train_size = len(train_loader.dataset)
-
-    return train_loss/train_size, train_correct/train_size
+        return train_loss/train_size, train_correct/train_size
 
 
 def cosine_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
