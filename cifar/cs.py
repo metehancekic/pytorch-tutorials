@@ -24,10 +24,8 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 # from deepillusion.torchdefenses import adversarial_epoch
 
 # CIFAR10 TRAIN TEST CODES
-from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
-from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
 from ..nn_tools import NeuralNetwork
-from ..read_datasets import cifar10
+from ..read_datasets import cifar10, cifar10_black_box
 from .parameters import get_arguments
 # from .gabor_trial import plot_image
 
@@ -77,11 +75,24 @@ def main():
     data_params = {"x_min": x_min, "x_max": x_max}
 
     #--------------------------------------------------#
-    #-------------------- Set up Model ----------------#
+    #---------- Set up Model and checkpoint name ------#
     #--------------------------------------------------#
-    frontend = globals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
-    CNN = globals()[args.model]().to(device)
-    model = AutoEncoder(frontend, CNN).to(device)
+    from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
+
+    checkpoint_name = args.model + ".pt"
+    if args.frontend == "Identity":
+        model = globals()[args.model]().to(device)
+    else:
+        from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
+        frontend = globals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
+        CNN = globals()[args.model]().to(device)
+        model = AutoEncoder(frontend, CNN).to(device)
+        checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + checkpoint_name
+
+    if args.tr_epoch_type == "Trades":
+        checkpoint_name = "trades" + "_" + checkpoint_name
+    elif args.tr_attack != "Standard":
+        checkpoint_name = args.tr_attack + "_" + checkpoint_name
 
     if device == "cuda":
         model = torch.nn.DataParallel(model)
@@ -90,8 +101,8 @@ def main():
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
     #         print(name)
-    # logger.info(model)
-    # logger.info("\n")
+    logger.info(model)
+    logger.info("\n")
 
     #--------------------------------------------------#
     #------------ Optimizer and Scheduler -------------#
@@ -131,13 +142,6 @@ def main():
                                              attack_params=attack_params,
                                              verbose=False))
 
-    # Checkpoint Namer
-    checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + args.model + ".pt"
-    if args.tr_epoch_type == "Trades":
-        checkpoint_name = "trades" + "_" + checkpoint_name
-    elif args.tr_attack != "Standard":
-        checkpoint_name = args.tr_attack + "_" + checkpoint_name
-
     #--------------------------------------------------#
     #------------------ Train-Test-Attack -------------#
     #--------------------------------------------------#
@@ -162,6 +166,12 @@ def main():
     #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
     #     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
     #     breakpoint()
+
+    if args.black_box:
+        attack_loader = cifar10_black_box(args)
+        test_loss, test_acc = NN.eval_model_blackbox(attack_loader=attack_loader)
+        logger.info("Black Box test accuracy")
+        logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     if args.attack_network:
         attack_params = {
@@ -188,15 +198,6 @@ def main():
 
         test_loss, test_acc = NN.eval_model(adversarial_args=adversarial_args, progress_bar=True)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
-
-    # if args.black_box:
-    #     attack_loader = imagenette_black_box(args)
-
-    #     test_args = dict(model=model,
-    #                      test_loader=attack_loader)
-    #     test_loss, test_acc = adversarial_test(**test_args)
-    #     logger.info("Black Box test accuracy")
-    #     logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
 
 if __name__ == "__main__":

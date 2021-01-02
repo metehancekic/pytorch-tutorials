@@ -24,7 +24,7 @@ def trades_loss(model,
                 beta=1.0,
                 distance='l_inf'):
     # define KL-loss
-    criterion_kl = nn.KLDivLoss(size_average=False)
+    criterion_kl = nn.KLDivLoss(reduction="sum")
     model.eval()
     batch_size = len(x_natural)
     # generate adversarial example

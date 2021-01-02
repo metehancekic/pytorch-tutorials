@@ -59,19 +59,6 @@ class NeuralNetwork(object):
         self.model.load_state_dict(torch.load(checkpoint_dir))
 
     def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=False):
-        """
-        Description: Evaluate model with test dataset,
-            if adversarial args are present then adversarially perturbed test set.
-        Input :
-            adversarial_args :                   (dict)
-                attack:                          (deepillusion.torchattacks)
-                attack_args:                     (dict)
-                    attack arguments for given attack except "x" and "y_true"
-            progress_bar: Progress bar           (Bool)
-        Output:
-            train_loss : Train loss              (float)
-            train_accuracy : Train accuracy      (float)
-        """
 
         device = self.model.parameters().__next__().device
 
@@ -117,6 +104,33 @@ class NeuralNetwork(object):
             perturbed_labels = np.concatenate(tuple(perturbed_labels))
 
         test_size = len(self.test_loader.dataset)
+
+        return test_loss/test_size, test_correct/test_size
+
+    def eval_model_blackbox(self, attack_loader, progress_bar=False):
+
+        device = self.model.parameters().__next__().device
+        self.model.eval()
+
+        test_loss = 0
+        test_correct = 0
+        if progress_bar:
+            iter_test_loader = tqdm(
+                iterable=attack_loader,
+                unit="batch",
+                leave=False)
+        else:
+            iter_test_loader = attack_loader
+
+        for data, target in iter_test_loader:
+            data, target = data.to(device), target.to(device)
+            output = self.model(data)
+            cross_ent = nn.CrossEntropyLoss()
+            test_loss += cross_ent(output, target).item() * data.size(0)
+            pred = output.argmax(dim=1, keepdim=False)
+            test_correct += pred.eq(target.view_as(pred)).sum().item()
+
+        test_size = len(attack_loader.dataset)
 
         return test_loss/test_size, test_correct/test_size
 
@@ -371,73 +385,6 @@ def adversarial_test(model, test_loader, adversarial_args=None, verbose=False, p
         test_correct += pred.eq(target.view_as(pred)).sum().item()
     # print(test_correct)
 
-    test_size = len(test_loader.dataset)
-
-    return test_loss/test_size, test_correct/test_size
-
-
-def save_blackbox(model, test_loader, adversarial_args=None, verbose=False, progress_bar=False):
-    """
-    Description: Evaluate model with test dataset,
-        if adversarial args are present then adversarially perturbed test set.
-    Input :
-        model : Neural Network               (torch.nn.Module)
-        test_loader : Data loader            (torch.utils.data.DataLoader)
-        adversarial_args :                   (dict)
-            attack:                          (deepillusion.torchattacks)
-            attack_args:                     (dict)
-                attack arguments for given attack except "x" and "y_true"
-        verbose: Verbosity                   (Bool)
-        progress_bar: Progress bar           (Bool)
-    Output:
-        train_loss : Train loss              (float)
-        train_accuracy : Train accuracy      (float)
-    """
-
-    device = model.parameters().__next__().device
-
-    model.eval()
-
-    test_loss = 0
-    test_correct = 0
-    if progress_bar:
-        iter_test_loader = tqdm(
-            iterable=test_loader,
-            unit="batch",
-            leave=False)
-    else:
-        iter_test_loader = test_loader
-
-    perturbed_data = []
-    perturbed_labels = []
-    for data, target in iter_test_loader:
-
-        data, target = data.to(device), target.to(device)
-
-        # Adversary
-        if adversarial_args and adversarial_args["attack"]:
-            adversarial_args["attack_args"]["net"] = model
-            adversarial_args["attack_args"]["x"] = data
-            adversarial_args["attack_args"]["y_true"] = target
-            perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
-            data += perturbs
-
-        output = model(data)
-
-        perturbed_data.append(data.detach().cpu().numpy())
-        perturbed_labels.append(target.detach().cpu().numpy())
-
-        cross_ent = nn.CrossEntropyLoss()
-        test_loss += cross_ent(output, target).item() * data.size(0)
-
-        pred = output.argmax(dim=1, keepdim=False)
-        test_correct += pred.eq(target.view_as(pred)).sum().item()
-
-    perturbed_data = np.concatenate(tuple(perturbed_data))
-    perturbed_labels = np.concatenate(tuple(perturbed_labels))
-
-    np.savez("/home/metehan/pytorch-tutorials/imagenette/data/black_box_resnet",
-             perturbed_data, perturbed_labels)
     test_size = len(test_loader.dataset)
 
     return test_loss/test_size, test_correct/test_size
