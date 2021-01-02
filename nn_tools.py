@@ -103,6 +103,7 @@ class NeuralNetwork(object):
             perturbed_data = np.concatenate(tuple(perturbed_data))
             perturbed_labels = np.concatenate(tuple(perturbed_labels))
 
+        breakpoint()
         test_size = len(self.test_loader.dataset)
         np.savez("/home/metehan/pytorch-tutorials/cifar/data/black_box_resnet",
                  perturbed_data, perturbed_labels)
