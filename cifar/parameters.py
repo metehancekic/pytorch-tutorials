@@ -134,8 +134,8 @@ def get_arguments():
     others.add_argument("--seed", type=int, default=1, metavar="S",
                         help="random seed (default: 1)"
                         )
-    others.add_argument("--log-interval", type=int, default=100, metavar="N",
-                        help="how many batches to wait before logging training status",
+    others.add_argument("--log_interval", type=int, default=10, metavar="N",
+                        help="how many epochs to wait before logging test status",
                         )
 
     # Actions
