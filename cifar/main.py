@@ -196,7 +196,8 @@ def main():
         for key in attack_params:
             logger.info(key + ': ' + str(attack_params[key]))
 
-        test_loss, test_acc = NN.eval_model(adversarial_args=adversarial_args, progress_bar=True)
+        test_loss, test_acc = NN.eval_model(
+            adversarial_args=adversarial_args, progress_bar=True, save_blackbox=True)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
 
