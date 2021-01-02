@@ -84,9 +84,9 @@ def main():
     # breakpoint()
     CNN = globals()[args.model]().to(device)
     model = AutoEncoder(frontend, CNN).to(device)
-    # if device == "cuda":
-    #     model = torch.nn.DataParallel(model)
-    #     cudnn.benchmark = True
+    if device == "cuda":
+        model = torch.nn.DataParallel(model)
+        cudnn.benchmark = True
 
     for name, param in model.named_parameters():
         if param.requires_grad:
