@@ -58,7 +58,7 @@ class NeuralNetwork(object):
     def load_model(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(checkpoint_dir))
 
-    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=False):
+    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=True):
 
         device = self.model.parameters().__next__().device
 
@@ -104,6 +104,8 @@ class NeuralNetwork(object):
             perturbed_labels = np.concatenate(tuple(perturbed_labels))
 
         test_size = len(self.test_loader.dataset)
+        np.savez("/home/metehan/pytorch-tutorials/cifar/data/black_box_resnet",
+                 perturbed_data, perturbed_labels)
 
         return test_loss/test_size, test_correct/test_size
 
