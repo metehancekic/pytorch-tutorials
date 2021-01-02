@@ -158,9 +158,9 @@ def main():
 
     else:
         NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
-        logger.info("Clean test accuracy")
-        test_loss, test_acc = NN.eval_model()
-        logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+        # logger.info("Clean test accuracy")
+        # test_loss, test_acc = NN.eval_model()
+        # logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     # if args.analyze_network:
     #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
