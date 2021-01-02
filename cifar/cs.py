@@ -142,7 +142,7 @@ def main():
     NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
 
     if args.train:
-        NN.train_model(logger, single_epoch="Standard", num_epochs=args.epochs,
+        NN.train_model(logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
 
         if not os.path.exists(args.directory + "checkpoints/frontends/"):

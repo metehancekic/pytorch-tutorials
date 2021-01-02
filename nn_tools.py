@@ -30,11 +30,7 @@ class NeuralNetwork(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(self, logger, single_epoch=None, num_epochs=100, log_interval=2, adversarial_args=None):
-        if single_epoch is None or single_epoch == "Standard":
-            single_epoch = self.adversarial_epoch
-        elif single_epoch == "trades":
-            single_epoch = self.trades_epoch
+    def train_model(self, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None):
         logger.info("Standard training")
         logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
@@ -48,7 +44,7 @@ class NeuralNetwork(object):
 
         for epoch in range(1, num_epochs + 1):
             start_time = time.time()
-            train_loss, train_acc = single_epoch(**epoch_args)
+            train_loss, train_acc = epoch_dictionary[epoch_type](**epoch_args)
             end_time = time.time()
             lr = self.scheduler.get_lr()[0]
             logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
@@ -124,77 +120,79 @@ class NeuralNetwork(object):
 
         return test_loss/test_size, test_correct/test_size
 
-    def adversarial_epoch(self, adversarial_args=None):
 
-        self.model.train()
-        device = self.model.parameters().__next__().device
+def adversarial_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
 
-        train_loss = 0
-        train_correct = 0
-        for data, target in train_loader:
+    model.train()
+    device = model.parameters().__next__().device
 
-            data, target = data.to(device), target.to(device)
+    train_loss = 0
+    train_correct = 0
+    for data, target in train_loader:
 
-            # Adversary
-            if adversarial_args and adversarial_args["attack"]:
-                adversarial_args["attack_args"]["net"] = self.model
-                adversarial_args["attack_args"]["x"] = data
-                adversarial_args["attack_args"]["y_true"] = target
-                perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
-                data += perturbs
+        data, target = data.to(device), target.to(device)
 
-            self.optimizer.zero_grad()
-            output = self.model(data)
-            cross_ent = nn.CrossEntropyLoss()
-            loss = cross_ent(output, target)
-            loss.backward()
-            self.optimizer.step()
-            if self.scheduler:
-                self.scheduler.step()
+        # Adversary
+        if adversarial_args and adversarial_args["attack"]:
+            adversarial_args["attack_args"]["net"] = model
+            adversarial_args["attack_args"]["x"] = data
+            adversarial_args["attack_args"]["y_true"] = target
+            perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
+            data += perturbs
 
-            train_loss += loss.item() * data.size(0)
-            pred_adv = output.argmax(dim=1, keepdim=False)
-            train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
+        optimizer.zero_grad()
+        output = model(data)
+        cross_ent = nn.CrossEntropyLoss()
+        loss = cross_ent(output, target)
+        loss.backward()
+        optimizer.step()
+        if scheduler:
+            scheduler.step()
 
-        train_size = len(self.train_loader.dataset)
+        train_loss += loss.item() * data.size(0)
+        pred_adv = output.argmax(dim=1, keepdim=False)
+        train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
 
-        return train_loss/train_size, train_correct/train_size
+    train_size = len(train_loader.dataset)
 
-    def trades_epoch(self, adversarial_args=None):
+    return train_loss/train_size, train_correct/train_size
 
-        self.model.train()
 
-        device = self.model.parameters().__next__().device
+def trades_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
 
-        train_loss = 0
-        train_correct = 0
-        for batch_idx, (data, target) in enumerate(train_loader):
-            data, target = data.to(device), target.to(device)
+    model.train()
 
-            self.optimizer.zero_grad()
+    device = model.parameters().__next__().device
 
-            # calculate robust loss
-            loss, output = trades_loss(model=self.model,
-                                       x_natural=data,
-                                       y=target,
-                                       optimizer=self.optimizer,
-                                       step_size=adversarial_args["attack_args"]["attack_params"]["step_size"],
-                                       epsilon=adversarial_args["attack_args"]["attack_params"]["eps"],
-                                       perturb_steps=adversarial_args["attack_args"]["attack_params"]["num_steps"],
-                                       beta=adversarial_args["attack_args"]["attack_params"]["beta"],
-                                       distance='l_inf')
-            loss.backward()
-            self.optimizer.step()
-            if self.scheduler:
-                self.scheduler.step()
+    train_loss = 0
+    train_correct = 0
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
 
-            train_loss += loss.item() * data.size(0)
-            pred_adv = output.argmax(dim=1, keepdim=False)
-            train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
+        optimizer.zero_grad()
 
-        train_size = len(self.train_loader.dataset)
+        # calculate robust loss
+        loss, output = trades_loss(model=.model,
+                                   x_natural=data,
+                                   y=target,
+                                   optimizer=optimizer,
+                                   step_size=adversarial_args["attack_args"]["attack_params"]["step_size"],
+                                   epsilon=adversarial_args["attack_args"]["attack_params"]["eps"],
+                                   perturb_steps=adversarial_args["attack_args"]["attack_params"]["num_steps"],
+                                   beta=adversarial_args["attack_args"]["attack_params"]["beta"],
+                                   distance='l_inf')
+        loss.backward()
+        optimizer.step()
+        if scheduler:
+            scheduler.step()
 
-        return train_loss/train_size, train_correct/train_size
+        train_loss += loss.item() * data.size(0)
+        pred_adv = output.argmax(dim=1, keepdim=False)
+        train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
+
+    train_size = len(train_loader.dataset)
+
+    return train_loss/train_size, train_correct/train_size
 
 
 def cosine_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
@@ -249,43 +247,6 @@ def cosine_epoch(model, train_loader, optimizer, scheduler=None, adversarial_arg
         pred_adv = output.argmax(dim=1, keepdim=False)
         train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
         # breakpoint()
-
-    train_size = len(train_loader.dataset)
-
-    return train_loss/train_size, train_correct/train_size
-
-
-def trades_epoch(model, train_loader, optimizer, scheduler=None, adversarial_args=None):
-
-    model.train()
-
-    device = model.parameters().__next__().device
-
-    train_loss = 0
-    train_correct = 0
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-
-        optimizer.zero_grad()
-
-        # calculate robust loss
-        loss, output = trades_loss(model=model,
-                                   x_natural=data,
-                                   y=target,
-                                   optimizer=optimizer,
-                                   step_size=adversarial_args["attack_args"]["attack_params"]["step_size"],
-                                   epsilon=adversarial_args["attack_args"]["attack_params"]["eps"],
-                                   perturb_steps=adversarial_args["attack_args"]["attack_params"]["num_steps"],
-                                   beta=adversarial_args["attack_args"]["attack_params"]["beta"],
-                                   distance='l_inf')
-        loss.backward()
-        optimizer.step()
-        if scheduler:
-            scheduler.step()
-
-        train_loss += loss.item() * data.size(0)
-        pred_adv = output.argmax(dim=1, keepdim=False)
-        train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
 
     train_size = len(train_loader.dataset)
 
@@ -576,3 +537,8 @@ def frontend_analysis(model, test_loader):
     o5 = np.concatenate(tuple(o5))
 
     return [orig_images, o1, o2, o3, o4, o5]
+
+
+epoch_dictionary = {"Standard": adversarial_epoch,
+                    "Adversarial": adversarial_epoch,
+                    "Trades": trades_epoch}
