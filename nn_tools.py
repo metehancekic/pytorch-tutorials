@@ -29,7 +29,7 @@ class NeuralNetwork(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(logger, single_epoch=None, num_epochs=100, log_interval=2, adversarial_args=None):
+    def train_model(self, logger, single_epoch=None, num_epochs=100, log_interval=2, adversarial_args=None):
         if single_epoch is None:
             single_epoch = self.adversarial_epoch
         logger.info("Standard training")
@@ -53,13 +53,13 @@ class NeuralNetwork(object):
                 test_loss, test_acc = adversarial_test(**test_args)
                 logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
-    def save_model(checkpoint_dir):
+    def save_model(self, checkpoint_dir):
         torch.save(self.model.state_dict(), checkpoint_dir)
 
-    def load_model(checkpoint_dir):
+    def load_model(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(checkpoint_dir))
 
-    def eval_model(progress_bar=False, adversarial_args=None, save_blackbox=False):
+    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=False):
         """
         Description: Evaluate model with test dataset,
             if adversarial args are present then adversarially perturbed test set.
@@ -121,7 +121,7 @@ class NeuralNetwork(object):
 
         return test_loss/test_size, test_correct/test_size
 
-    def adversarial_epoch(adversarial_args=None):
+    def adversarial_epoch(self, adversarial_args=None):
 
         self.model.train()
         device = self.model.parameters().__next__().device
