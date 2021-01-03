@@ -84,7 +84,7 @@ def get_arguments():
     adv_training.add_argument("-tr_Nrest", "--tr_num_restarts", type=int, default=1, metavar="",
                               help="number of restarts for pgd for training",
                               )
-    adv_training.add_argument("-tr_tr", "--tr_trades", type=float, default=1.0,
+    adv_training.add_argument("-tr_tr", "--tr_trades", type=float, default=6.0,
                               metavar="", help="TRADES Beta (1/lambda)",
                               )
     adv_training.add_argument("--tr_attack_logging", type=int, default=10,
