@@ -30,9 +30,9 @@ class NeuralNetwork(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(self, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None):
-        logger.info("Standard training")
-        logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
+    def train_model(self, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
+        if verbose:
+            logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
         epoch_args = dict(model=self.model,
                           train_loader=self.train_loader,
@@ -47,10 +47,11 @@ class NeuralNetwork(object):
             train_loss, train_acc = epoch_dictionary[epoch_type](**epoch_args)
             end_time = time.time()
             lr = self.scheduler.get_lr()[0]
-            logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
-            if epoch % log_interval == 0 or epoch == num_epochs:
-                test_loss, test_acc = adversarial_test(**test_args)
-                logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+            if verbose:
+                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
+                if epoch % log_interval == 0 or epoch == num_epochs:
+                    test_loss, test_acc = adversarial_test(**test_args)
+                    logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     def save_model(self, checkpoint_dir):
         torch.save(self.model.state_dict(), checkpoint_dir)
