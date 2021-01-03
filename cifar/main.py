@@ -2,10 +2,11 @@
 
 Example Run
 
-python -m pytorch-tutorials.imagenette.cs -at -bb -b 16 --epochs 100 --attack PGD --frontend LP_Gabor_Layer_v3 --model ResNet -tr -sm
+python -m pytorch-tutorials.cifar.main -at -bb -b 16 --epochs 100 --attack PGD --frontend LP_Gabor_Layer_v3 --model ResNet -tr -sm
 """
 import time
 import os
+from pprint import pformat
 from os import path
 from tqdm import tqdm
 import numpy as np
@@ -53,7 +54,7 @@ def main():
                                 args.frontend + "_" + args.model + '.log'),
             logging.StreamHandler()
             ])
-    logger.info(args)
+    logger.info(pformat(vars(args)))
     logger.info("\n")
 
     #--------------------------------------------------#

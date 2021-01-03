@@ -56,8 +56,8 @@ def get_arguments():
     # Adversarial training parameters
     adv_training = parser.add_argument_group("adv_training", "Adversarial training arguments")
 
-    adv_training.add_argument("-et", "--tr_epoch_type", type=str, default="Standard", metavar="fgsm/pgd",
-                              help="Attack method",
+    adv_training.add_argument("-et", "--tr_epoch_type", type=str, default="Standard", metavar="Trades",
+                              help="Epoch type",
                               )
 
     adv_training.add_argument("-tra", "--tr_attack", type=str, default="Standard", metavar="fgsm/pgd",
