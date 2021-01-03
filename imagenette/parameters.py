@@ -84,6 +84,12 @@ def get_arguments():
     adv_training.add_argument("-tr_Nrest", "--tr_num_restarts", type=int, default=1, metavar="",
                               help="number of restarts for pgd for training",
                               )
+    adv_training.add_argument("-tr_tr", "--tr_trades", type=float, default=1.0,
+                              metavar="", help="TRADES Beta (1/lambda)",
+                              )
+    adv_training.add_argument("--tr_attack_logging", type=int, default=10,
+                              metavar="", help="Number of epochs per attack logging",
+                              )
 
     # Adversarial testing parameters
     adv_testing = parser.add_argument_group("adv_testing", "Adversarial testing arguments")
