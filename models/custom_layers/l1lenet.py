@@ -8,13 +8,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 
-from .tools import Normalize
+from ..tools import Normalize
 
 
 class L1LeNet(nn.Module):
 
     # 2 Conv layers, 2 Fc layers
-
     def __init__(self, num_classes=10):
         super(LeNet, self).__init__()
 
