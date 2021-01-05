@@ -148,6 +148,7 @@ def adversarial_epoch(model, train_loader, optimizer, scheduler=None, adversaria
             perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
             data += perturbs
 
+        model.l1_normalize_weights()
         optimizer.zero_grad()
         output = model(data)
         cross_ent = nn.CrossEntropyLoss()

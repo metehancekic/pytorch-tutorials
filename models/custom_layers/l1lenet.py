@@ -27,7 +27,7 @@ class L1LeNet(nn.Module):
 
     def forward(self, x):
 
-        self.l1_normalize_weights()
+        # self.l1_normalize_weights()
         out = self.norm(x)
         out = F.max_pool2d(F.relu(self.conv1(out)), (2, 2))
         out = F.max_pool2d(F.relu(self.conv2(out)), (2, 2))
