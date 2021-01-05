@@ -15,9 +15,9 @@ class L1LeNet(nn.Module):
 
     # 2 Conv layers, 2 Fc layers
     def __init__(self, num_classes=10):
-        super(LeNet, self).__init__()
+        super(L1LeNet, self).__init__()
 
-        # self.norm = Normalize(mean=[0.1307], std=[0.3081])
+        self.norm = Normalize(mean=[0.1307], std=[0.3081])
         self.conv1 = nn.Conv2d(1, 32, kernel_size=5,
                                stride=1, padding=2, bias=True)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=5,
@@ -27,9 +27,9 @@ class L1LeNet(nn.Module):
 
     def forward(self, x):
 
-        # out = self.norm(x)
         self.l1_normalize_weights()
-        out = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
+        out = self.norm(x)
+        out = F.max_pool2d(F.relu(self.conv1(out)), (2, 2))
         out = F.max_pool2d(F.relu(self.conv2(out)), (2, 2))
         out = out.view(out.size(0), -1)
         out = F.relu(self.fc1(out))
