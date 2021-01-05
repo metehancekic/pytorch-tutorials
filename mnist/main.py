@@ -87,7 +87,6 @@ def main():
     from ..models.custom_layers import L1LeNet
     # Define and move the model to device
     model = locals()[args.model]().to(device)
-    breakpoint()
 
     # Check the total number of trainable parameters
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
@@ -143,7 +142,8 @@ def main():
         checkpoint_name += "_adv_" + args.tr_attack
     checkpoint_name += ".pt"
 
-    # Train network if args.train is set to True (You can set that true by calling '-tr' flag, default is False)
+    NN = NeuralNetwork(model, args.model, optimizer, scheduler)
+
     if args.train:
         NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
