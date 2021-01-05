@@ -24,7 +24,7 @@ class L1LeNet(nn.Module):
                                stride=1, padding=2, bias=True)
         self.fc1 = nn.Linear(7 * 7 * 64, 1024, bias=True)
         self.fc2 = nn.Linear(1024, num_classes, bias=True)
-        self.l1_normalize_weights()
+        # self.l1_normalize_weights()
 
     def forward(self, x):
 
