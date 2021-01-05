@@ -81,11 +81,11 @@ def main():
 
     checkpoint_name = args.model + ".pt"
     if args.frontend == "Identity":
-        model = globals()[args.model]().to(device)
+        model = locals()[args.model]().to(device)
     else:
         from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
-        frontend = globals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
-        CNN = globals()[args.model]().to(device)
+        frontend = locals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
+        CNN = locals()[args.model]().to(device)
         model = AutoEncoder(frontend, CNN).to(device)
         checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + checkpoint_name
 

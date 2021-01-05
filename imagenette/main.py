@@ -147,10 +147,10 @@ def main():
     #------------------ Train-Test-Attack -------------#
     #--------------------------------------------------#
 
-    NN = NeuralNetwork(model, train_loader, test_loader, optimizer, scheduler)
+    NN = NeuralNetwork(model, args.model, optimizer, scheduler)
 
     if args.train:
-        NN.train_model(logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
+        NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
 
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
@@ -160,7 +160,7 @@ def main():
     else:
         NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
         logger.info("Clean test accuracy")
-        test_loss, test_acc = NN.eval_model()
+        test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     # if args.analyze_network:
@@ -170,7 +170,7 @@ def main():
 
     if args.black_box:
         attack_loader = imagenette_black_box(args)
-        test_loss, test_acc = NN.eval_model_blackbox(attack_loader=attack_loader)
+        test_loss, test_acc = NN.eval_model(attack_loader)
         logger.info("Black Box test accuracy")
         logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
@@ -198,7 +198,7 @@ def main():
             logger.info(key + ': ' + str(attack_params[key]))
 
         test_loss, test_acc = NN.eval_model(
-            adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
+            test_loader, adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
 

@@ -55,7 +55,11 @@ def get_arguments():
     # Adversarial training parameters
     adv_training = parser.add_argument_group("adv_training", "Adversarial training arguments")
 
-    adv_training.add_argument("-tra", "--tr_attack", type=str, default="RFGSM", metavar="fgsm/pgd",
+    adv_training.add_argument("-et", "--tr_epoch_type", type=str, default="Standard", metavar="Trades",
+                              help="Epoch type",
+                              )
+
+    adv_training.add_argument("-tra", "--tr_attack", type=str, default="Standard", metavar="fgsm/pgd",
                               help="Attack method",
                               )
     adv_training.add_argument("--tr_norm", type=str, default="inf", metavar="inf/p",
@@ -78,6 +82,12 @@ def get_arguments():
                               )
     adv_training.add_argument("-tr_Nrest", "--tr_num_restarts", type=int, default=1, metavar="",
                               help="number of restarts for pgd for training",
+                              )
+    adv_training.add_argument("-tr_tr", "--tr_trades", type=float, default=6.0,
+                              metavar="", help="TRADES Beta (1/lambda)",
+                              )
+    adv_training.add_argument("--tr_attack_logging", type=int, default=10,
+                              metavar="", help="Number of epochs per attack logging",
                               )
 
     # Adversarial testing parameters

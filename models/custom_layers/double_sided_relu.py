@@ -32,6 +32,21 @@ def DTReLU(x, bias=0, filters=None, epsilon=8.0/255):
     return F.relu(x - bias) + bias * torch.sign(F.relu(x - bias)) - F.relu(-x - bias) - bias * torch.sign(F.relu(-x - bias))
 
 
+def TReLU(x, bias=0, filters=None, epsilon=8.0/255):
+
+    def bias_calculator(filters, epsilon):
+        # breakpoint()
+        bias = epsilon * torch.sum(torch.abs(filters), dim=(1, 2, 3)).unsqueeze(dim=0)
+        bias = bias.unsqueeze(dim=2)
+        bias = bias.unsqueeze(dim=3)
+        return bias
+
+    if isinstance(filters, torch.Tensor):
+        bias = bias_calculator(filters, epsilon)
+
+    return F.relu(x - bias) + bias * torch.sign(F.relu(x - bias))
+
+
 def test_DReLU():
     import numpy as np
     import matplotlib.pyplot as plt

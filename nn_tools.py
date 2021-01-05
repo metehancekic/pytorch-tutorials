@@ -16,26 +16,44 @@ import torch.nn.functional as F
 
 from .trades import trades_loss
 
-__all__ = ['adversarial_epoch', 'adversarial_test']
+__all__ = ["NeuralNetwork", "adversarial_epoch", "adversarial_test"]
 
 
 class NeuralNetwork(object):
+    """
+    Description:
+        Neural network wrapper for training, testing, attacking
 
-    def __init__(self, model, train_loader, test_loader, optimizer, scheduler=None):
+    init:
+        model,
+        name,
+        optimizer,
+        scheduler (optional),
+
+    methods:
+        train_model
+        save_model
+        load_model
+        eval_model
+
+    """
+
+    def __init__(self, model, name, optimizer, scheduler=None):
         super(NeuralNetwork, self).__init__()
 
         self.model = model
-        self.train_loader = train_loader
-        self.test_loader = test_loader
+        self.name = name
+        # self.train_loader = train_loader
+        # self.test_loader = test_loader
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def train_model(self, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
+    def train_model(self, train_loader, test_loader, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
         if verbose:
             logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
 
         epoch_args = dict(model=self.model,
-                          train_loader=self.train_loader,
+                          train_loader=train_loader,
                           optimizer=self.optimizer,
                           scheduler=self.scheduler,
                           adversarial_args=adversarial_args)
@@ -59,10 +77,9 @@ class NeuralNetwork(object):
     def load_model(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(checkpoint_dir))
 
-    def eval_model(self, progress_bar=False, adversarial_args=None, save_blackbox=False):
+    def eval_model(self, test_loader, progress_bar=False, adversarial_args=None, save_blackbox=False):
 
         device = self.model.parameters().__next__().device
-
         self.model.eval()
 
         perturbed_data = []
@@ -71,11 +88,11 @@ class NeuralNetwork(object):
         test_correct = 0
         if progress_bar:
             iter_test_loader = tqdm(
-                iterable=self.test_loader,
+                iterable=test_loader,
                 unit="batch",
                 leave=False)
         else:
-            iter_test_loader = self.test_loader
+            iter_test_loader = test_loader
 
         for data, target in iter_test_loader:
             data, target = data.to(device), target.to(device)
@@ -104,37 +121,10 @@ class NeuralNetwork(object):
             perturbed_data = np.concatenate(tuple(perturbed_data))
             perturbed_labels = np.concatenate(tuple(perturbed_labels))
 
-        test_size = len(self.test_loader.dataset)
+        test_size = len(test_loader.dataset)
         if save_blackbox:
             np.savez("/home/metehan/pytorch-tutorials/cifar/data/black_box_resnet",
                      perturbed_data, perturbed_labels)
-
-        return test_loss/test_size, test_correct/test_size
-
-    def eval_model_blackbox(self, attack_loader, progress_bar=False):
-
-        device = self.model.parameters().__next__().device
-        self.model.eval()
-
-        test_loss = 0
-        test_correct = 0
-        if progress_bar:
-            iter_test_loader = tqdm(
-                iterable=attack_loader,
-                unit="batch",
-                leave=False)
-        else:
-            iter_test_loader = attack_loader
-
-        for data, target in iter_test_loader:
-            data, target = data.to(device), target.to(device)
-            output = self.model(data)
-            cross_ent = nn.CrossEntropyLoss()
-            test_loss += cross_ent(output, target).item() * data.size(0)
-            pred = output.argmax(dim=1, keepdim=False)
-            test_correct += pred.eq(target.view_as(pred)).sum().item()
-
-        test_size = len(attack_loader.dataset)
 
         return test_loss/test_size, test_correct/test_size
 

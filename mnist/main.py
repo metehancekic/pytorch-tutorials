@@ -27,8 +27,7 @@ from torchvision import datasets, transforms
 from deepillusion.torchattacks import FGSM, RFGSM, PGD
 from deepillusion.torchattacks.analysis import whitebox_test
 
-
-from ..models import LeNet, LeNet2d
+from ..nn_tools import NeuralNetwork
 from ..train_test import adversarial_epoch, adversarial_test
 from ..read_datasets import mnist
 from .parameters import get_arguments
@@ -36,46 +35,56 @@ from .parameters import get_arguments
 # from models import ConvolutionalNeuralNet as CNN
 # from arguments import get_arguments_mnist
 
-logger = logging.getLogger(__name__)
 
-
-def main():
-
-    # Get arguments for current run
+def initialize_everything():
+    """ main function to run the experiments """
+    logger = logging.getLogger(__name__)
     args = get_arguments()
 
-    # Set seeds to get same results every run
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
-
-    # Create a log fiolder to save logs
+    #--------------------------------------------------#
+    #-------------- LOGGER INITIALIZATION -------------#
+    #--------------------------------------------------#
     if not os.path.exists(args.directory + 'logs'):
         os.mkdir(args.directory + 'logs')
 
-    # Logging initiator
     logging.basicConfig(
         format='[%(asctime)s] - %(message)s',
         datefmt='%Y/%m/%d %H:%M:%S',
         level=logging.INFO,
         handlers=[
-            logging.FileHandler(args.directory + 'logs/' + args.model +
-                                '_' + args.tr_attack + '.log'),
+            logging.FileHandler(args.directory + 'logs/' + args.model + '.log'),
             logging.StreamHandler()
             ])
-
     logger.info(pformat(vars(args)))
     logger.info("\n")
 
-    # Check if GPU exists and if you want to use it
+    #--------------------------------------------------#
+    #--------------- Seeds and Device -----------------#
+    #--------------------------------------------------#
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    # Get train and test loader
+    #--------------------------------------------------#
+    #------------------ Read Data ---------------------#
+    #--------------------------------------------------#
     train_loader, test_loader = mnist(args)
-    x_min = 0.0  # min pixel value
-    x_max = 1.0  # max pixel value
+    x_min = 0.0
+    x_max = 1.0
+    data_params = {"x_min": x_min, "x_max": x_max}
 
+    return logger, args, device, train_loader, test_loader, data_params
+
+
+def main():
+
+    logger, args, device, train_loader, test_loader, data_params = initialize_everything()
+
+    from ..models import LeNet, LeNet2d
+    from ..models.custom_layers import L1LeNet
     # Define and move the model to device
     model = globals()[args.model]().to(device)
     breakpoint()
@@ -121,9 +130,6 @@ def main():
         "num_restarts": args.tr_num_restarts,
         }
 
-    # Parameters of the data for adversarial attack function
-    data_params = {"x_min": x_min, "x_max": x_max}
-
     # Adversarial arguments
     adversarial_args = dict(attack=attacks[args.tr_attack],
                             attack_args=dict(net=model,
@@ -139,44 +145,29 @@ def main():
 
     # Train network if args.train is set to True (You can set that true by calling '-tr' flag, default is False)
     if args.train:
-        logger.info(args.tr_attack + " training")
-        logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
+        NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
+                       log_interval=args.log_interval, adversarial_args=adversarial_args)
 
-        for epoch in range(1, args.epochs + 1):
-            start_time = time.time()
-
-            # Training (Adversarial or Standard)
-            train_args = dict(model=model,
-                              train_loader=train_loader,
-                              optimizer=optimizer,
-                              scheduler=scheduler,
-                              adversarial_args=adversarial_args)
-            train_loss, train_acc = adversarial_epoch(**train_args)
-
-            # Testing (Standard)
-            test_args = dict(model=model,
-                             test_loader=test_loader)
-            test_loss, test_acc = adversarial_test(**test_args)
-
-            end_time = time.time()
-            lr = scheduler.get_lr()[0]
-            logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
-            logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
-
-        # Save model parameters
-        if args.save_model:
-            if not os.path.exists(args.directory + "checkpoints/"):
-                os.makedirs(args.directory + "checkpoints/")
-            torch.save(model.state_dict(), args.directory + "checkpoints/" + checkpoint_name)
+        if not os.path.exists(args.directory + "checkpoints/"):
+            os.makedirs(args.directory + "checkpoints/")
+        NN.save_model(checkpoint_dir=args.directory + "checkpoints/" + checkpoint_name)
 
     else:
-        model.load_state_dict(torch.load(args.directory + "checkpoints/" + checkpoint_name))
-
+        NN.load_model(checkpoint_dir=args.directory + "checkpoints/" + checkpoint_name)
         logger.info("Clean test accuracy")
-        test_args = dict(model=model,
-                         test_loader=test_loader)
-        test_loss, test_acc = adversarial_test(**test_args)
+        test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+
+    # if args.analyze_network:
+    #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
+    #     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
+    #     breakpoint()
+
+    # if args.black_box:
+    #     attack_loader = cifar10_black_box(args)
+    #     test_loss, test_acc = NN.eval_model(attack_loader)
+    #     logger.info("Black Box test accuracy")
+    #     logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     if args.attack_network:
         attack_params = {
@@ -187,7 +178,7 @@ def main():
             "num_steps": args.num_iterations,
             "random_start": args.rand,
             "num_restarts": args.num_restarts,
-            "ensemble_size": 10
+            "EOT_size": 10
             }
 
         adversarial_args = dict(attack=attacks[args.attack],
@@ -201,12 +192,8 @@ def main():
         for key in attack_params:
             logger.info(key + ': ' + str(attack_params[key]))
 
-        test_args = dict(model=model,
-                         test_loader=test_loader,
-                         adversarial_args=adversarial_args,
-                         verbose=True,
-                         progress_bar=True)
-        test_loss, test_acc = adversarial_test(**test_args)
+        test_loss, test_acc = NN.eval_model(
+            test_loader, adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
 
