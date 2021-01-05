@@ -58,7 +58,7 @@ class NeuralNetwork(object):
                           scheduler=self.scheduler,
                           adversarial_args=adversarial_args)
         test_args = dict(model=self.model,
-                         test_loader=self.test_loader)
+                         test_loader=test_loader)
 
         for epoch in range(1, num_epochs + 1):
             start_time = time.time()
