@@ -86,7 +86,7 @@ def main():
     from ..models import LeNet, LeNet2d
     from ..models.custom_layers import L1LeNet
     # Define and move the model to device
-    model = globals()[args.model]().to(device)
+    model = locals()[args.model]().to(device)
     breakpoint()
 
     # Check the total number of trainable parameters
