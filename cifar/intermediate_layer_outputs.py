@@ -55,8 +55,8 @@ def intermediate_activations(args, data_params, model, data_loader, device):
         out = model(X)
 
         adversarial_args["attack_args"]["net"] = model
-        adversarial_args["attack_args"]["x"] = data
-        adversarial_args["attack_args"]["y_true"] = target
+        adversarial_args["attack_args"]["x"] = X
+        adversarial_args["attack_args"]["y_true"] = y
         perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
         X += perturbs
 
