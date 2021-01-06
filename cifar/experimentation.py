@@ -73,7 +73,7 @@ def main():
     bn1_list = []
     for X, y in test_loader:
         # forward pass -- getting the outputs
-        out = model(X)
+        out = model(X.to(device))
         # collect the activations in the correct list
         bn1_list.append(activation['bn1'])
 
