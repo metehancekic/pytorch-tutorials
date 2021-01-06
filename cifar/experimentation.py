@@ -77,7 +77,7 @@ def main():
 		# collect the activations in the correct list
 		bn1_list.append(activation['bn1']
 
-	breakpoint()
+	# breakpoint()
 
 	# for name, param in model.named_parameters():
 	#     if param.requires_grad:
