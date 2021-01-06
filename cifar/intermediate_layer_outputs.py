@@ -51,7 +51,7 @@ def intermediate_activations(args, data_params, model, data_loader, device):
     activation_list = []
     activation_list_adv = []
     for X, y in data_loader:
-        X = X.to(device)
+        X, y = X.to(device), y.to(device)
         out = model(X)
 
         adversarial_args["attack_args"]["net"] = model
