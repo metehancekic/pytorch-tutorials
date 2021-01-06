@@ -28,6 +28,7 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 from ..nn_tools import NeuralNetwork
 from ..read_datasets import cifar10_black_box
 from .initializer import initialize_everything
+from .intermediate_layer_outputs import intermediate_activations
 # from .gabor_trial import plot_image
 
 
@@ -58,25 +59,8 @@ def main():
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
-    # breakpoint()
 
-    activation = {}
-
-    def getActivation(name):
-        # the hook signature
-        def hook(model, input, output):
-            activation[name] = output.detach()
-        return hook
-
-    h1 = model.block3[0].bn1.register_forward_hook(getActivation('bn1'))
-
-    bn1_list = []
-    for X, y in test_loader:
-        # forward pass -- getting the outputs
-        out = model(X.to(device))
-        # collect the activations in the correct list
-        bn1_list.append(activation['bn1'])
-
+    list_activations = intermediate_activations(model, test_loader, device)
     breakpoint()
 
     # for name, param in model.named_parameters():
