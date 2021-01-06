@@ -33,153 +33,154 @@ from .initializer import initialize_everything
 
 def main():
 
-    logger, args, device, train_loader, test_loader, data_params = initialize_everything()
+	logger, args, device, train_loader, test_loader, data_params = initialize_everything()
 
-    #--------------------------------------------------#
-    #---------- Set up Model and checkpoint name ------#
-    #--------------------------------------------------#
-    from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
+	#--------------------------------------------------#
+	#---------- Set up Model and checkpoint name ------#
+	#--------------------------------------------------#
+	from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
 
-    checkpoint_name = args.model + ".pt"
-    if args.frontend == "Identity":
-        model = locals()[args.model]().to(device)
-    else:
-        from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
-        frontend = locals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
-        CNN = locals()[args.model]().to(device)
-        model = AutoEncoder(frontend, CNN).to(device)
-        checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + checkpoint_name
+	checkpoint_name = args.model + ".pt"
+	if args.frontend == "Identity":
+		model = locals()[args.model]().to(device)
+	else:
+		from ..models.custom_layers import CenterSurroundModule, AutoEncoder, Decoder, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer, LP_Gabor_Layer, LP_Gabor_Layer_v2, LP_Gabor_Layer_v3, LP_Gabor_Layer_v4,  LP_Gabor_Layer_v5,  LP_Gabor_Layer_v6, LP_Layer, Identity
+		frontend = locals()[args.frontend](beta=args.beta, BPDA_type=args.bpda_type).to(device)
+		CNN = locals()[args.model]().to(device)
+		model = AutoEncoder(frontend, CNN).to(device)
+		checkpoint_name = args.frontend + "_beta_" + str(int(args.beta)) + checkpoint_name
 
-    if args.tr_epoch_type == "Trades":
-        checkpoint_name = "trades" + "_" + checkpoint_name
-    elif args.tr_attack != "Standard":
-        checkpoint_name = args.tr_attack + "_" + checkpoint_name
+	if args.tr_epoch_type == "Trades":
+		checkpoint_name = "trades" + "_" + checkpoint_name
+	elif args.tr_attack != "Standard":
+		checkpoint_name = args.tr_attack + "_" + checkpoint_name
 
-    if device == "cuda":
-        model = torch.nn.DataParallel(model)
-        cudnn.benchmark = True
-    # breakpoint()
+	if device == "cuda":
+		model = torch.nn.DataParallel(model)
+		cudnn.benchmark = True
+	# breakpoint()
 
-    activation = {}
+	activation = {}
 
-    def getActivation(name):
-        # the hook signature
-        def hook(model, input, output):
-            activation[name] = output.detach()
-        return hook
+	def getActivation(name):
+		# the hook signature
+		def hook(model, input, output):
+			activation[name] = output.detach()
+		return hook
 
-    h1 = model.block3[0].bn1.register_forward_hook(getActivation('bn1'))
+	h1 = model.block3[0].bn1.register_forward_hook(getActivation('bn1'))
 
-    bn1_list = []
-    for X, y in test_loader:
-        # forward pass -- getting the outputs
-        out = model(X)
-        # collect the activations in the correct list
-        bn1_list.append(activation['bn1']
-    breakpoint()
+	bn1_list = []
+	for X, y in test_loader:
+		# forward pass -- getting the outputs
+		out = model(X)
+		# collect the activations in the correct list
+		bn1_list.append(activation['bn1']
 
-    # for name, param in model.named_parameters():
-    #     if param.requires_grad:
-    #         print(name)
-    logger.info(model)
-    logger.info("\n")
+	breakpoint()
 
-    #--------------------------------------------------#
-    #------------ Optimizer and Scheduler -------------#
-    #--------------------------------------------------#
-    optimizer=optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
-                          weight_decay=args.weight_decay)
+	# for name, param in model.named_parameters():
+	#     if param.requires_grad:
+	#         print(name)
+	logger.info(model)
+	logger.info("\n")
 
-    lr_steps=args.epochs * len(train_loader)
-    scheduler=torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=args.lr_min,
-                                                  max_lr=args.lr_max, step_size_up=lr_steps/2,
-                                                  step_size_down=lr_steps/2)
+	#--------------------------------------------------#
+	#------------ Optimizer and Scheduler -------------#
+	#--------------------------------------------------#
+	optimizer=optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
+						  weight_decay=args.weight_decay)
 
-    #--------------------------------------------------#
-    #------------ Adversarial Argumenrs ---------------#
-    #--------------------------------------------------#
+	lr_steps=args.epochs * len(train_loader)
+	scheduler=torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=args.lr_min,
+												  max_lr=args.lr_max, step_size_up=lr_steps/2,
+												  step_size_down=lr_steps/2)
 
-    attacks=dict(Standard=None,
-                   PGD=PGD,
-                   FGSM=FGSM,
-                   RFGSM=RFGSM,
-                   PGD_EOT=PGD_EOT)
+	#--------------------------------------------------#
+	#------------ Adversarial Argumenrs ---------------#
+	#--------------------------------------------------#
 
-    attack_params={
-        "norm": args.tr_norm,
-        "eps": args.tr_epsilon,
-        "alpha": args.tr_alpha,
-        "step_size": args.tr_step_size,
-        "num_steps": args.tr_num_iterations,
-        "random_start": args.tr_rand,
-        "num_restarts": args.tr_num_restarts,
-        "beta": args.tr_trades,
-        }
+	attacks=dict(Standard=None,
+				   PGD=PGD,
+				   FGSM=FGSM,
+				   RFGSM=RFGSM,
+				   PGD_EOT=PGD_EOT)
 
-    adversarial_args=dict(attack=attacks[args.tr_attack],
-                            attack_args=dict(net=model,
-                                             data_params=data_params,
-                                             attack_params=attack_params,
-                                             verbose=False))
+	attack_params={
+		"norm": args.tr_norm,
+		"eps": args.tr_epsilon,
+		"alpha": args.tr_alpha,
+		"step_size": args.tr_step_size,
+		"num_steps": args.tr_num_iterations,
+		"random_start": args.tr_rand,
+		"num_restarts": args.tr_num_restarts,
+		"beta": args.tr_trades,
+		}
 
-    #--------------------------------------------------#
-    #------------------ Train-Test-Attack -------------#
-    #--------------------------------------------------#
+	adversarial_args=dict(attack=attacks[args.tr_attack],
+							attack_args=dict(net=model,
+											 data_params=data_params,
+											 attack_params=attack_params,
+											 verbose=False))
 
-    NN=NeuralNetwork(model, args.model, optimizer, scheduler)
+	#--------------------------------------------------#
+	#------------------ Train-Test-Attack -------------#
+	#--------------------------------------------------#
 
-    if args.train:
-        NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
-                       log_interval=args.log_interval, adversarial_args=adversarial_args)
+	NN=NeuralNetwork(model, args.model, optimizer, scheduler)
 
-        if not os.path.exists(args.directory + "checkpoints/frontends/"):
-            os.makedirs(args.directory + "checkpoints/frontends/")
-        NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+	if args.train:
+		NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
+					   log_interval=args.log_interval, adversarial_args=adversarial_args)
 
-    else:
-        NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
-        logger.info("Clean test accuracy")
-        test_loss, test_acc=NN.eval_model(test_loader)
-        logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+		if not os.path.exists(args.directory + "checkpoints/frontends/"):
+			os.makedirs(args.directory + "checkpoints/frontends/")
+		NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
 
-    # if args.analyze_network:
-    #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
-    #     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
-    #     breakpoint()
+	else:
+		NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+		logger.info("Clean test accuracy")
+		test_loss, test_acc=NN.eval_model(test_loader)
+		logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
-    if args.black_box:
-        attack_loader=cifar10_black_box(args)
-        test_loss, test_acc=NN.eval_model(attack_loader)
-        logger.info("Black Box test accuracy")
-        logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+	# if args.analyze_network:
+	#     loss_landscape(model=model, data_loader=test_loader, img_index=0)
+	#     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
+	#     breakpoint()
 
-    if args.attack_network:
-        attack_params={
-            "norm": args.norm,
-            "eps": args.epsilon,
-            "alpha": args.alpha,
-            "step_size": args.step_size,
-            "num_steps": args.num_iterations,
-            "random_start": args.rand,
-            "num_restarts": args.num_restarts,
-            "EOT_size": 10
-            }
+	if args.black_box:
+		attack_loader=cifar10_black_box(args)
+		test_loss, test_acc=NN.eval_model(attack_loader)
+		logger.info("Black Box test accuracy")
+		logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
-        adversarial_args=dict(attack=attacks[args.attack],
-                                attack_args=dict(net=model,
-                                                 data_params=data_params,
-                                                 attack_params=attack_params,
-                                                 loss_function="cross_entropy",
-                                                 verbose=False,
-                                                 progress_bar=True))
+	if args.attack_network:
+		attack_params={
+			"norm": args.norm,
+			"eps": args.epsilon,
+			"alpha": args.alpha,
+			"step_size": args.step_size,
+			"num_steps": args.num_iterations,
+			"random_start": args.rand,
+			"num_restarts": args.num_restarts,
+			"EOT_size": 10
+			}
 
-        for key in attack_params:
-            logger.info(key + ': ' + str(attack_params[key]))
+		adversarial_args=dict(attack=attacks[args.attack],
+								attack_args=dict(net=model,
+												 data_params=data_params,
+												 attack_params=attack_params,
+												 loss_function="cross_entropy",
+												 verbose=False,
+												 progress_bar=True))
 
-        test_loss, test_acc=NN.eval_model(
-            test_loader, adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
-        logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
+		for key in attack_params:
+			logger.info(key + ': ' + str(attack_params[key]))
+
+		test_loss, test_acc=NN.eval_model(
+			test_loader, adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
+		logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
 
 if __name__ == "__main__":
-    main()
+	main()
