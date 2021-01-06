@@ -58,6 +58,24 @@ def main():
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
+    # breakpoint()
+
+    activation = {}
+
+    def getActivation(name):
+        # the hook signature
+        def hook(model, input, output):
+            activation[name] = output.detach()
+        return hook
+
+    h1 = model.block3[0].bn1.register_forward_hook(getActivation('bn1'))
+
+    bn1_list = []
+    for X, y in test_loader:
+        # forward pass -- getting the outputs
+        out = model(X)
+        # collect the activations in the correct list
+        bn1_list.append(activation['bn1']
     breakpoint()
 
     # for name, param in model.named_parameters():
@@ -69,11 +87,11 @@ def main():
     #--------------------------------------------------#
     #------------ Optimizer and Scheduler -------------#
     #--------------------------------------------------#
-    optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
+    optimizer=optim.SGD(model.parameters(), lr=args.lr_max, momentum=args.momentum,
                           weight_decay=args.weight_decay)
 
-    lr_steps = args.epochs * len(train_loader)
-    scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=args.lr_min,
+    lr_steps=args.epochs * len(train_loader)
+    scheduler=torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=args.lr_min,
                                                   max_lr=args.lr_max, step_size_up=lr_steps/2,
                                                   step_size_down=lr_steps/2)
 
@@ -81,13 +99,13 @@ def main():
     #------------ Adversarial Argumenrs ---------------#
     #--------------------------------------------------#
 
-    attacks = dict(Standard=None,
+    attacks=dict(Standard=None,
                    PGD=PGD,
                    FGSM=FGSM,
                    RFGSM=RFGSM,
                    PGD_EOT=PGD_EOT)
 
-    attack_params = {
+    attack_params={
         "norm": args.tr_norm,
         "eps": args.tr_epsilon,
         "alpha": args.tr_alpha,
@@ -98,7 +116,7 @@ def main():
         "beta": args.tr_trades,
         }
 
-    adversarial_args = dict(attack=attacks[args.tr_attack],
+    adversarial_args=dict(attack=attacks[args.tr_attack],
                             attack_args=dict(net=model,
                                              data_params=data_params,
                                              attack_params=attack_params,
@@ -108,7 +126,7 @@ def main():
     #------------------ Train-Test-Attack -------------#
     #--------------------------------------------------#
 
-    NN = NeuralNetwork(model, args.model, optimizer, scheduler)
+    NN=NeuralNetwork(model, args.model, optimizer, scheduler)
 
     if args.train:
         NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
@@ -121,7 +139,7 @@ def main():
     else:
         NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
         logger.info("Clean test accuracy")
-        test_loss, test_acc = NN.eval_model(test_loader)
+        test_loss, test_acc=NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     # if args.analyze_network:
@@ -130,13 +148,13 @@ def main():
     #     breakpoint()
 
     if args.black_box:
-        attack_loader = cifar10_black_box(args)
-        test_loss, test_acc = NN.eval_model(attack_loader)
+        attack_loader=cifar10_black_box(args)
+        test_loss, test_acc=NN.eval_model(attack_loader)
         logger.info("Black Box test accuracy")
         logger.info(f'Blackbox Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
 
     if args.attack_network:
-        attack_params = {
+        attack_params={
             "norm": args.norm,
             "eps": args.epsilon,
             "alpha": args.alpha,
@@ -147,7 +165,7 @@ def main():
             "EOT_size": 10
             }
 
-        adversarial_args = dict(attack=attacks[args.attack],
+        adversarial_args=dict(attack=attacks[args.attack],
                                 attack_args=dict(net=model,
                                                  data_params=data_params,
                                                  attack_params=attack_params,
@@ -158,7 +176,7 @@ def main():
         for key in attack_params:
             logger.info(key + ': ' + str(attack_params[key]))
 
-        test_loss, test_acc = NN.eval_model(
+        test_loss, test_acc=NN.eval_model(
             test_loader, adversarial_args=adversarial_args, progress_bar=True, save_blackbox=False)
         logger.info(f'{args.attack} test \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}\n')
 
