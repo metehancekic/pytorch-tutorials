@@ -70,7 +70,7 @@ class NeuralNetwork(object):
                 if epoch % log_interval == 0 or epoch == num_epochs:
                     test_loss, test_acc = adversarial_test(**test_args)
                     logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
-                self.model.l1_normalize_weights()
+                # self.model.l1_normalize_weights()
 
     def save_model(self, checkpoint_dir):
         torch.save(self.model.state_dict(), checkpoint_dir)
