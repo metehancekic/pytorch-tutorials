@@ -60,7 +60,7 @@ def main():
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    list_activations = intermediate_activations(model, test_loader, device)
+    list_activations, list_activations_adv = intermediate_activations(model, test_loader, device)
     breakpoint()
 
     # for name, param in model.named_parameters():
