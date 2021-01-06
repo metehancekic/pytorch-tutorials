@@ -32,14 +32,14 @@ def intermediate_activations(args, data_params, model, data_loader, device):
                    PGD_EOT=PGD_EOT)
 
     attack_params = {
-        "norm": args.tr_norm,
-        "eps": args.tr_epsilon,
-        "alpha": args.tr_alpha,
-        "step_size": args.tr_step_size,
-        "num_steps": args.tr_num_iterations,
-        "random_start": args.tr_rand,
-        "num_restarts": args.tr_num_restarts,
-        "beta": args.tr_trades,
+        "norm": args.norm,
+        "eps": args.epsilon,
+        "alpha": args.alpha,
+        "step_size": args.step_size,
+        "num_steps": args.num_iterations,
+        "random_start": args.rand,
+        "num_restarts": args.num_restarts,
+        "EOT_size": 10
         }
 
     adversarial_args = dict(attack=attacks[args.tr_attack],
