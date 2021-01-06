@@ -42,7 +42,7 @@ def intermediate_activations(args, data_params, model, data_loader, device):
         "EOT_size": 10
         }
 
-    adversarial_args = dict(attack=attacks[args.tr_attack],
+    adversarial_args = dict(attack=attacks[args.attack],
                             attack_args=dict(net=model,
                                              data_params=data_params,
                                              attack_params=attack_params,
