@@ -58,6 +58,7 @@ def main():
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
+    breakpoint()
 
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
