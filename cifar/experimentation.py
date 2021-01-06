@@ -60,10 +60,6 @@ def main():
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
 
-    list_activations, list_activations_adv = intermediate_activations(
-        args, data_params, model, test_loader, device)
-    breakpoint()
-
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
     #         print(name)
@@ -127,6 +123,10 @@ def main():
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+
+        list_activations, list_activations_adv = intermediate_activations(
+            args, data_params, model, test_loader, device)
+        breakpoint()
 
     # if args.analyze_network:
     #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
