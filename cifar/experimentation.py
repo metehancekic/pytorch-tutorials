@@ -39,7 +39,7 @@ def main():
     #--------------------------------------------------#
     #---------- Set up Model and checkpoint name ------#
     #--------------------------------------------------#
-    from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet
+    from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet, VGG_modified
 
     checkpoint_name = args.model + ".pt"
     if args.frontend == "Identity":
