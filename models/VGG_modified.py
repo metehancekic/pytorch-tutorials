@@ -15,7 +15,7 @@ cfg = {
 
 class VGG_modified(nn.Module):
     def __init__(self, vgg_name="VGG11"):
-        super(VGG, self).__init__()
+        super(VGG_modified, self).__init__()
         self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
             0.2471, 0.2435, 0.2616])
         self.features = self._make_layers(cfg[vgg_name])
