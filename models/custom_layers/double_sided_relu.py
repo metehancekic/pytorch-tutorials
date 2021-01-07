@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch.nn import Parameter
+from torch import nn
 
 
 def DReLU(x, bias=0, filters=None, epsilon=8.0/255):
