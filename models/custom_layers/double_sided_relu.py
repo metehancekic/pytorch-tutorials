@@ -53,7 +53,7 @@ class TReLU(nn.Module):
     def __init__(self, in_channels):
         super(TReLU, self).__init__()
 
-        self.bias = Parameter(torch.zeros((in_channels)), requires_grad=True)
+        self.bias = Parameter(torch.zeros((1, in_channels, 1, 1)), requires_grad=True)
 
     def forward(self, x):
         return F.relu(x - torch.abs(self.bias)) + torch.abs(self.bias) * torch.sign(F.relu(x - torch.abs(self.bias)))
