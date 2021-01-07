@@ -1,6 +1,7 @@
 '''VGG11/13/16/19 in Pytorch.'''
 import torch
 import torch.nn as nn
+from .tools import Normalize
 
 
 from .custom_layers import TReLU
