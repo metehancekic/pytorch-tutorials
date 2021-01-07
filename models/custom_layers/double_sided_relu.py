@@ -52,7 +52,7 @@ class TReLU(nn.Module):
 
     def __init__(self, in_channels):
         super(TReLU, self).__init__()
-        self.noise_level = 8/255
+        self.noise_level = 255/255.
         self.bias = Parameter(torch.randn((1, in_channels, 1, 1))/10., requires_grad=True)
 
     def forward(self, x):
