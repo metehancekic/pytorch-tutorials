@@ -47,6 +47,17 @@ def DTReLU(x, bias=0, filters=None, epsilon=8.0/255):
 #         bias = bias_calculator(filters, epsilon)
 
 #     return F.relu(x - bias) + bias * torch.sign(F.relu(x - bias))
+# def Quad(x):
+#     return x**2
+
+
+class Quad(nn.Module):
+    def __init__(self):
+        super(Quad, self).__init__()
+
+    def forward(self, x):
+        return x**2
+
 
 class TReLU(nn.Module):
 

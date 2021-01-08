@@ -4,7 +4,7 @@ import torch.nn as nn
 from .tools import Normalize
 
 
-from .custom_layers import TReLU
+from .custom_layers import TReLU, Quad
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -38,7 +38,7 @@ class VGG_modified(nn.Module):
             else:
                 layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
                            nn.BatchNorm2d(x, affine=False),
-                           TReLU(x)]
+                           Quad()]
                 in_channels = x
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)

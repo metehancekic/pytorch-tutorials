@@ -1,7 +1,7 @@
 from .gabor import GaborConv2d
 from .gaussian import GaussianConv2d, DifferenceOfGaussianConv2d
 from .lowpass import LowPassConv2d
-from .double_sided_relu import DReLU, DTReLU, TReLU
+from .double_sided_relu import DReLU, DTReLU, TReLU, Quad
 from .ternary import TQuantization, TSQuantization, TQuantization_BPDA, TSQuantization_BPDA
 from .center_surround import CenterSurroundModule, CenterSurroundConv, DoGLayer, DoGLowpassLayer, LowpassLayer, DoG_LP_Layer
 from .autoencoder import AutoEncoder
