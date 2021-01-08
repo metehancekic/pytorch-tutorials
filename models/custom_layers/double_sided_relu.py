@@ -56,7 +56,7 @@ class Quad(nn.Module):
         super(Quad, self).__init__()
 
     def forward(self, x):
-        return x**2
+        return x**3
 
 
 class TReLU(nn.Module):
