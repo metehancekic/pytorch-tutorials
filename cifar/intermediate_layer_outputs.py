@@ -10,7 +10,7 @@ def intermediate_activations(args, data_params, model, data_loader, device):
     def getActivation(name):
         # the hook signature
         def hook(model, input, output):
-            activation[name] = output.detach()
+            activation[name] = output.detach().cpu().numpy()
         return hook
 
     h1 = model.encoder.lp.register_forward_hook(getActivation('frontend'))
