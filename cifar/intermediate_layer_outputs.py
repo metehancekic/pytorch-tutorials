@@ -13,7 +13,7 @@ def intermediate_activations(args, data_params, model, data_loader, device):
             activation[name] = output.detach().cpu().numpy()
         return hook
 
-    h1 = model.encoder.lp.register_forward_hook(getActivation('frontend'))
+    h1 = model.encoder.register_forward_hook(getActivation('frontend'))
     h2 = model.decoder.features[0].register_forward_hook(getActivation('conv1'))
     # h2 = model.block3[1].bn1.register_forward_hook(getActivation('bn2'))
     # h3 = model.block3[2].bn1.register_forward_hook(getActivation('bn3'))
