@@ -13,7 +13,8 @@ def intermediate_activations(args, data_params, model, data_loader, device):
             activation[name] = output.detach()
         return hook
 
-    h1 = model.block3[0].bn1.register_forward_hook(getActivation('bn1'))
+    h1 = model.encoder.lp.register_forward_hook(getActivation('frontend'))
+    h2 = model.decoder.features[0].register_forward_hook(getActivation('conv1'))
     # h2 = model.block3[1].bn1.register_forward_hook(getActivation('bn2'))
     # h3 = model.block3[2].bn1.register_forward_hook(getActivation('bn3'))
     # h4 = model.block3[3].bn1.register_forward_hook(getActivation('bn4'))
@@ -48,6 +49,8 @@ def intermediate_activations(args, data_params, model, data_loader, device):
                                              attack_params=attack_params,
                                              verbose=False))
 
+    frontend_list = []
+    frontend_list_adv = []
     activation_list = []
     activation_list_adv = []
     for X, y in data_loader:
@@ -60,10 +63,12 @@ def intermediate_activations(args, data_params, model, data_loader, device):
         perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
         X += perturbs
 
-        activation_list.append(activation['bn1'])
+        frontend_list.append(activation['frontend'])
+        activation_list.append(activation['conv1'])
 
         out = model(X)
 
-        activation_list_adv.append(activation['bn1'])
+        activation_list_adv.append(activation['conv1'])
+        frontend_list_adv.append(activation['frontend'])
 
-    return activation_list, activation_list_adv
+    return frontend_list, frontend_list_adv, activation_list, activation_list_adv

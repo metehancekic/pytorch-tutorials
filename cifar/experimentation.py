@@ -124,7 +124,7 @@ def main():
         test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
         breakpoint()
-        list_activations, list_activations_adv = intermediate_activations(
+        frontend_act, frontend_act_adv, list_activations, list_activations_adv = intermediate_activations(
             args, data_params, model, test_loader, device)
         # breakpoint()
 
