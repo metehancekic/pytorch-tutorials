@@ -53,6 +53,8 @@ def intermediate_activations(args, data_params, model, data_loader, device):
     frontend_list_adv = []
     activation_list = []
     activation_list_adv = []
+    data_x = []
+    data_x_adv = []
     for X, y in data_loader:
         X, y = X.to(device), y.to(device)
         out = model(X)
@@ -61,7 +63,12 @@ def intermediate_activations(args, data_params, model, data_loader, device):
         adversarial_args["attack_args"]["x"] = X
         adversarial_args["attack_args"]["y_true"] = y
         perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
+
+        data_x.append(X.detach().cpu().numpy())
+
         X += perturbs
+
+        data_x_adv.append(X.detach().cpu().numpy())
 
         frontend_list.append(activation['frontend'])
         activation_list.append(activation['conv1'])
@@ -71,4 +78,4 @@ def intermediate_activations(args, data_params, model, data_loader, device):
         activation_list_adv.append(activation['conv1'])
         frontend_list_adv.append(activation['frontend'])
 
-    return frontend_list, frontend_list_adv, activation_list, activation_list_adv
+    return frontend_list, frontend_list_adv, activation_list, activation_list_adv, data_x_adv, data_x
