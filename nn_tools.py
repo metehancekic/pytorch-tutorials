@@ -73,6 +73,31 @@ class NeuralNetwork(object):
                 # self.model.l1_normalize_weights()
             # print(self.model.features[10].bias)
 
+    def train_model_adaptive(self, train_loader, test_loader, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
+        if verbose:
+            logger.info('Epoch \t Seconds \t LR \t \t Alpha \t \t Train Loss \t Train Acc')
+
+        epoch_args = dict(model=self.model,
+                          train_loader=train_loader,
+                          optimizer=self.optimizer,
+                          scheduler=self.scheduler,
+                          adversarial_args=adversarial_args)
+        test_args = dict(model=self.model,
+                         test_loader=test_loader)
+
+        for epoch in range(1, num_epochs + 1):
+            start_time = time.time()
+            train_loss, train_acc = adaptive_epoch(epoch_percent=epoch/num_epochs, **epoch_args)
+            end_time = time.time()
+            lr = self.scheduler.get_lr()[0]
+            if verbose:
+                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {alpha:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
+                if epoch % log_interval == 0 or epoch == num_epochs:
+                    test_loss, test_acc = adversarial_test(**test_args)
+                    logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+                # self.model.l1_normalize_weights()
+            # print(self.model.features[10].bias)
+
     def save_model(self, checkpoint_dir):
         torch.save(self.model.state_dict(), checkpoint_dir)
 
@@ -153,6 +178,38 @@ def adversarial_epoch(model, train_loader, optimizer, scheduler=None, adversaria
         # model.l1_normalize_weights()
         optimizer.zero_grad()
         output = model(data)
+        cross_ent = nn.CrossEntropyLoss()
+        loss = cross_ent(output, target)
+        loss.backward()
+        optimizer.step()
+        if scheduler:
+            scheduler.step()
+
+        train_loss += loss.item() * data.size(0)
+        pred_adv = output.argmax(dim=1, keepdim=False)
+        train_correct += pred_adv.eq(target.view_as(pred_adv)).sum().item()
+
+    train_size = len(train_loader.dataset)
+
+    return train_loss/train_size, train_correct/train_size
+
+
+def adaptive_epoch(model, train_loader, optimizer, epoch_percent, scheduler=None, adversarial_args=None):
+
+    model.train()
+    device = model.parameters().__next__().device
+
+    train_loss = 0
+    train_correct = 0
+    num_batch = len(train_loader)
+    for batch_idx, (data, target) in enumerate(train_loader):
+
+        data, target = data.to(device), target.to(device)
+
+        alpha = epoch_percent + batch_idx/num_batch
+
+        optimizer.zero_grad()
+        output = model(data, alpha)
         cross_ent = nn.CrossEntropyLoss()
         loss = cross_ent(output, target)
         loss.backward()

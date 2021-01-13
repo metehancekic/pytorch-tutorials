@@ -19,11 +19,16 @@ class VGG_modified(nn.Module):
         super(VGG_modified, self).__init__()
         self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
             0.2471, 0.2435, 0.2616])
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False)
+        self.trelu = TReLU(64)
+
         self.features = self._make_layers(cfg[vgg_name])
         self.classifier = nn.Linear(512, 10)
 
-    def forward(self, x):
+    def forward(self, x, alpha):
         out = self.norm(x)
+        out = self.conv1(out)
+        out = self.trelu(out, self.conv1.weight, alpha)
         out = self.features(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
@@ -33,12 +38,14 @@ class VGG_modified(nn.Module):
         layers = []
         in_channels = 3
         for x in cfg:
-            if x == 'M':
+            if x == 64:
+                continue
+            elif x == 'M':
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
             else:
                 layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
                            nn.BatchNorm2d(x, affine=False),
-                           TReLU(x)]
+                           nn.ReLU(inplace=True)]
                 in_channels = x
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)

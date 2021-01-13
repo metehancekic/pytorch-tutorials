@@ -66,8 +66,17 @@ class TReLU(nn.Module):
         # self.noise_level = 255/255.
         self.bias = Parameter(torch.randn((1, in_channels, 1, 1))/10., requires_grad=True)
 
-    def forward(self, x):
-        # x = x + torch.rand_like(x, device=x.device) * self.noise_level * 2 - self.noise_level
+    def bias_calculator(self, filters):
+        bias = torch.sum(torch.abs(filters), dim=(1, 2, 3)).unsqueeze(dim=0)
+        bias = bias.unsqueeze(dim=2)
+        bias = bias.unsqueeze(dim=3)
+        return bias
+
+    def forward(self, x, filters, alpha):
+        bias = self.bias_calculator(filters)
+        if self.training:
+            x = x + alpha * (torch.rand_like(x, device=x.device) * bias * 2 - bias)
+        bias = alpha * bias
         return F.relu(x - torch.abs(self.bias)) + torch.abs(self.bias) * torch.sign(F.relu(x - torch.abs(self.bias)))
 
 
