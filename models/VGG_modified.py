@@ -17,9 +17,9 @@ cfg = {
 class VGG_modified(nn.Module):
     def __init__(self, vgg_name="VGG11"):
         super(VGG_modified, self).__init__()
-        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
-            0.2471, 0.2435, 0.2616])
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2471, 0.2435, 0.2616])
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64, affine=False)
         self.trelu = TReLU(64)
 
         self.features = self._make_layers(cfg[vgg_name])
@@ -28,6 +28,7 @@ class VGG_modified(nn.Module):
     def forward(self, x, alpha):
         out = self.norm(x)
         out = self.conv1(out)
+        out = self.bn1(out)
         out = self.trelu(out, self.conv1.weight, alpha)
         out = self.features(out)
         out = out.view(out.size(0), -1)
