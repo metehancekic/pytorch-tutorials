@@ -23,7 +23,7 @@ class AutoEncoder_adaptive(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, x, alpha):
+    def forward(self, x, alpha=1):
         return self.decoder(self.encoder(x), alpha)
 
     # def encoder_no_update(self):
