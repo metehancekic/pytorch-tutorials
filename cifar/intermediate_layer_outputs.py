@@ -2,6 +2,7 @@ import torch
 from deepillusion.torchattacks import FGSM, RFGSM, PGD, PGD_EOT
 from deepillusion.torchattacks.analysis import whitebox_test
 from deepillusion.torchattacks.analysis.plot import loss_landscape
+import numpy as np
 
 
 def intermediate_activations(args, data_params, model, data_loader, device):
