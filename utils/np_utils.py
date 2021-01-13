@@ -7,6 +7,7 @@ def l1_normalizer(x):
 
 def mean_l1_norm(x):
     norms = np.linalg.norm(x.reshape(x.shape[0], -1), ord=1, axis=-1)
+    breakpoint()
     mean_value = np.mean(norms)
     return mean_value
 
