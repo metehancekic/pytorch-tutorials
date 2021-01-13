@@ -93,7 +93,7 @@ class NeuralNetwork(object):
             if verbose:
                 logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {epoch/num_epochs:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
                 if epoch % log_interval == 0 or epoch == num_epochs:
-                    test_loss, test_acc = adversarial_test(**test_args)
+                    test_loss, test_acc = adaptive_test(alpha=(epoch+1)/num_epochs, **test_args)
                     logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
                 # self.model.l1_normalize_weights()
             # print(self.model.features[10].bias)
@@ -431,6 +431,64 @@ def adversarial_test(model, test_loader, adversarial_args=None, verbose=False, p
             data += perturbs
 
         output = model(data)
+
+        cross_ent = nn.CrossEntropyLoss()
+        test_loss += cross_ent(output, target).item() * data.size(0)
+
+        pred = output.argmax(dim=1, keepdim=False)
+        test_correct += pred.eq(target.view_as(pred)).sum().item()
+    # print(test_correct)
+
+    test_size = len(test_loader.dataset)
+
+    return test_loss/test_size, test_correct/test_size
+
+
+def adaptive_test(model, test_loader, alpha, adversarial_args=None, verbose=False, progress_bar=False):
+    """
+    Description: Evaluate model with test dataset,
+        if adversarial args are present then adversarially perturbed test set.
+    Input :
+        model : Neural Network               (torch.nn.Module)
+        test_loader : Data loader            (torch.utils.data.DataLoader)
+        adversarial_args :                   (dict)
+            attack:                          (deepillusion.torchattacks)
+            attack_args:                     (dict)
+                attack arguments for given attack except "x" and "y_true"
+        verbose: Verbosity                   (Bool)
+        progress_bar: Progress bar           (Bool)
+    Output:
+        train_loss : Train loss              (float)
+        train_accuracy : Train accuracy      (float)
+    """
+
+    device = model.parameters().__next__().device
+
+    model.eval()
+
+    test_loss = 0
+    test_correct = 0
+    if progress_bar:
+        iter_test_loader = tqdm(
+            iterable=test_loader,
+            unit="batch",
+            leave=False)
+    else:
+        iter_test_loader = test_loader
+
+    for data, target in iter_test_loader:
+
+        data, target = data.to(device), target.to(device)
+
+        # Adversary
+        if adversarial_args and adversarial_args["attack"]:
+            adversarial_args["attack_args"]["net"] = model
+            adversarial_args["attack_args"]["x"] = data
+            adversarial_args["attack_args"]["y_true"] = target
+            perturbs = adversarial_args['attack'](**adversarial_args["attack_args"])
+            data += perturbs
+
+        output = model(data, alpha)
 
         cross_ent = nn.CrossEntropyLoss()
         test_loss += cross_ent(output, target).item() * data.size(0)
