@@ -28,8 +28,8 @@ class VGG_modified(nn.Module):
     def forward(self, x, alpha):
         # out = self.norm(x)
         out = self.conv1(x)
-        out = self.bn1(out)
         out = self.trelu(out, self.conv1.weight, alpha)
+        # out = self.bn1(out)
         out = self.features(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
