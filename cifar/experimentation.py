@@ -29,6 +29,7 @@ from ..nn_tools import NeuralNetwork
 from ..read_datasets import cifar10_black_box
 from .initializer import initialize_everything
 from .intermediate_layer_outputs import intermediate_activations
+from ..utils import mean_l1_norm, mean_l2_norm, mean_linf_norm
 # from .gabor_trial import plot_image
 
 
@@ -123,8 +124,56 @@ def main():
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
-        frontend_act, frontend_act_adv, list_activations, list_activations_adv, data_x, data_x_adv = intermediate_activations(
+        imgs, imgs_adv, front, front_adv, act, act_adv = intermediate_activations(
             args, data_params, model, test_loader, device)
+
+        l1_imgs = mean_l1_norm(imgs)
+        l2_imgs = mean_l2_norm(imgs)
+        linf_imgs = mean_linf_norm(imgs)
+
+        l1_imgs_diff = mean_l1_norm(imgs_adv-imgs)
+        l2_imgs_diff = mean_l2_norm(imgs_adv-imgs)
+        linf_imgs_diff = mean_linf_norm(imgs_adv-imgs)
+
+        l1_front = mean_l1_norm(front)
+        l2_front = mean_l2_norm(front)
+        linf_front = mean_linf_norm(front)
+
+        l1_front_diff = mean_l1_norm(front_adv-front)
+        l2_front_diff = mean_l2_norm(front_adv-front)
+        linf_front_diff = mean_linf_norm(front_adv-front)
+
+        l1_act = mean_l1_norm(act)
+        l2_act = mean_l2_norm(act)
+        linf_act = mean_linf_norm(act)
+
+        l1_act_diff = mean_l1_norm(act_adv-act)
+        l2_act_diff = mean_l2_norm(act_adv-act)
+        linf_act_diff = mean_linf_norm(act_adv-act)
+
+        print(f"Mean L1 norm of images:  {l1_imgs}")
+        print(f"Mean L2 norm of images:  {l2_imgs}")
+        print(f"Mean Li norm of images:  {linf_imgs}")
+
+        print(f"Mean L1 norm of error_img:  {l1_imgs_diff}")
+        print(f"Mean L2 norm of error_img:  {l2_imgs_diff}")
+        print(f"Mean Li norm of error_img:  {linf_imgs_diff}")
+
+        print(f"Mean L1 norm of frontend output:  {l1_front}")
+        print(f"Mean L2 norm of frontend output:  {l2_front}")
+        print(f"Mean Li norm of frontend output:  {linf_front}")
+
+        print(f"Mean L1 norm of error_frontend:  {l1_front_diff}")
+        print(f"Mean L2 norm of error_frontend:  {l2_front_diff}")
+        print(f"Mean Li norm of error_frontend:  {linf_front_diff}")
+
+        print(f"Mean L1 norm of first conv output:  {l1_act}")
+        print(f"Mean L2 norm of first conv output:  {l2_act}")
+        print(f"Mean Li norm of first conv output:  {linf_act}")
+
+        print(f"Mean L1 norm of error_conv:  {l1_act_diff}")
+        print(f"Mean L2 norm of error_conv:  {l2_act_diff}")
+        print(f"Mean Li norm of error_conv:  {linf_act_diff}")
 
         breakpoint()
 
