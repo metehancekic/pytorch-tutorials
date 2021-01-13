@@ -91,7 +91,7 @@ class NeuralNetwork(object):
             end_time = time.time()
             lr = self.scheduler.get_lr()[0]
             if verbose:
-                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {alpha:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
+                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {epoch/num_epochs:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
                 if epoch % log_interval == 0 or epoch == num_epochs:
                     test_loss, test_acc = adversarial_test(**test_args)
                     logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
