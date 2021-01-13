@@ -87,13 +87,18 @@ class NeuralNetwork(object):
 
         for epoch in range(1, num_epochs + 1):
             start_time = time.time()
-            train_loss, train_acc = adaptive_epoch(epoch_percent=epoch/num_epochs, **epoch_args)
+            if epoch <= num_epochs/2:
+                epoch_percent = 2*epoch/num_epochs
+            else:
+                epoch_percent = 1.0
+            train_loss, train_acc = adaptive_epoch(
+                epoch_percent=epoch_percent, **epoch_args)
             end_time = time.time()
             lr = self.scheduler.get_lr()[0]
             if verbose:
-                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {epoch/num_epochs:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
+                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {epoch_percent:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
                 if epoch % log_interval == 0 or epoch == num_epochs:
-                    test_loss, test_acc = adaptive_test(alpha=(epoch+1)/num_epochs, **test_args)
+                    test_loss, test_acc = adaptive_test(alpha=epoch_percent, **test_args)
                     logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
                 # self.model.l1_normalize_weights()
             # print(self.model.features[10].bias)
@@ -207,6 +212,8 @@ def adaptive_epoch(model, train_loader, optimizer, epoch_percent, scheduler=None
         data, target = data.to(device), target.to(device)
 
         alpha = epoch_percent + batch_idx/num_batch
+        if alpha > 1:
+            alpha = 1
 
         optimizer.zero_grad()
         output = model(data, alpha)
