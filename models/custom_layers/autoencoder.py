@@ -18,7 +18,7 @@ class AutoEncoder(nn.Module):
 
 class AutoEncoder_adaptive(nn.Module):
     def __init__(self, encoder, decoder):
-        super(AutoEncoder, self).__init__()
+        super(AutoEncoder_adaptive, self).__init__()
 
         self.encoder = encoder
         self.decoder = decoder
