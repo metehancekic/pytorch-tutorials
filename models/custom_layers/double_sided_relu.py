@@ -77,7 +77,7 @@ class TReLU(nn.Module):
         if self.training:
             x = x + alpha * (torch.rand_like(x, device=x.device) * bias * 2 - bias)
         bias = alpha * bias
-        # breakpoint()
+        breakpoint()
         return F.relu(x - torch.abs(bias)) + torch.abs(bias) * torch.sign(F.relu(x - torch.abs(bias)))
 
 
