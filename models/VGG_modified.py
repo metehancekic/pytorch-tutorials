@@ -39,6 +39,7 @@ class VGG_modified(nn.Module):
         in_channels = 3
         for x in cfg:
             if x == 64:
+                in_channels = 64
                 continue
             elif x == 'M':
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
