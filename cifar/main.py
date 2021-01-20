@@ -28,6 +28,7 @@ from deepillusion.torchattacks.analysis.plot import loss_landscape
 from ..nn_tools import NeuralNetwork
 from ..read_datasets import cifar10_black_box
 from .initializer import initialize_everything
+from ..utils import mean_l1_norm, mean_l2_norm, mean_linf_norm
 # from .gabor_trial import plot_image
 
 
@@ -38,9 +39,9 @@ def main():
     #--------------------------------------------------#
     #---------- Set up Model and checkpoint name ------#
     #--------------------------------------------------#
-    from ..models import ResNet, VGG, MobileNet, MobileNetV2, PreActResNet, EfficientNet, VGG_modified
+    from ..models import ResNet, VGG, VGG_modified, VGG_modified2
 
-    checkpoint_name = args.model + ".pt"
+    checkpoint_name = args.model
     if args.frontend == "Identity":
         model = locals()[args.model]().to(device)
     else:
@@ -112,21 +113,92 @@ def main():
     if args.train:
         NN.train_model(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
                        log_interval=args.log_interval, adversarial_args=adversarial_args)
-
+        if args.prune:
+            from ..utils import neural_network_pruner
+            neural_network_pruner(model)
+            checkpoint += "_pruned"
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
             os.makedirs(args.directory + "checkpoints/frontends/")
-        NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+        NN.save_model(checkpoint_dir=args.directory +
+                      "checkpoints/frontends/" + checkpoint_name + ".pt")
 
     else:
-        NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+        if args.prune:
+            checkpoint += "_pruned"
+        NN.load_model(checkpoint_dir=args.directory +
+                      "checkpoints/frontends/" + checkpoint_name + ".pt")
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+        from ..utils import neural_network_sparsity
+        # neural_network_pruner(model)
+        neural_network_sparsity(model)
+        # logger.info("Clean test accuracy")
+        test_loss, test_acc = NN.eval_model(test_loader)
+        # logger.info("After pruning")
+        # logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
+    if args.analyze_network:
+        # loss_landscape(model=model, data_loader=test_loader, img_index=0)
+        # outputs = frontend_analysis(model=frontend, test_loader=test_loader)
+        from ..utils import intermediate_layer_outputs
+        imgs, imgs_adv, act, act_adv = intermediate_layer_outputs(
+            args, data_params, model, test_loader, device)
 
-    # if args.analyze_network:
-    #     loss_landscape(model=model, data_loader=test_loader, img_index=0)
-    #     outputs = frontend_analysis(model=frontend, test_loader=test_loader)
-    #     breakpoint()
+        l1_imgs = mean_l1_norm(imgs)
+        l2_imgs = mean_l2_norm(imgs)
+        linf_imgs = mean_linf_norm(imgs)
+
+        l1_imgs_diff = mean_l1_norm(imgs_adv-imgs)
+        l2_imgs_diff = mean_l2_norm(imgs_adv-imgs)
+        linf_imgs_diff = mean_linf_norm(imgs_adv-imgs)
+
+        l1_act = mean_l1_norm(act)
+        l2_act = mean_l2_norm(act)
+        linf_act = mean_linf_norm(act)
+
+        l1_act_diff = mean_l1_norm(act_adv-act)
+        l2_act_diff = mean_l2_norm(act_adv-act)
+        linf_act_diff = mean_linf_norm(act_adv-act)
+
+        print(f"Mean L1 norm of images:  {l1_imgs}")
+        print(f"Mean L2 norm of images:  {l2_imgs}")
+        print(f"Mean Li norm of images:  {linf_imgs}")
+
+        print(f"Mean L1 norm of error_img:  {l1_imgs_diff}")
+        print(f"Mean L2 norm of error_img:  {l2_imgs_diff}")
+        print(f"Mean Li norm of error_img:  {linf_imgs_diff}")
+
+        print(f"Mean L1 norm of first conv output:  {l1_act}")
+        print(f"Mean L2 norm of first conv output:  {l2_act}")
+        print(f"Mean Li norm of first conv output:  {linf_act}")
+
+        print(f"Mean L1 norm of error_conv:  {l1_act_diff}")
+        print(f"Mean L2 norm of error_conv:  {l2_act_diff}")
+        print(f"Mean Li norm of error_conv:  {linf_act_diff}")
+
+        from matplotlib import pyplot as plt
+        bins = np.arange(0, 1, 0.01)
+        plt.figure()
+        plt.hist(act[0].reshape(-1), bins)
+        plt.savefig(args.directory + "figs/" + "first_layer_activation_hist_1")
+
+        plt.figure()
+        plt.hist(act_adv[0].reshape(-1) - act[0].reshape(-1), bins)
+        plt.savefig(args.directory + "figs/" + "first_layer_activation_difference_hist_1")
+
+        plt.figure()
+        plt.hist(act.reshape(-1), bins)
+        plt.savefig(args.directory + "figs/" + "first_layer_activation_hist")
+
+        plt.figure()
+        plt.hist(act_adv.reshape(-1) - act.reshape(-1), bins)
+        plt.savefig(args.directory + "figs/" + "first_layer_activation_difference_hist")
+
+        print("Sparstiy level for clean input : " + str(np.count_nonzero(act)/np.size(act)))
+        print("Sparstiy level for adversarial input : " +
+              str(np.count_nonzero(act_adv)/np.size(act_adv)))
+
+        breakpoint()
 
     if args.black_box:
         attack_loader = cifar10_black_box(args)

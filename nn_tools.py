@@ -43,35 +43,28 @@ class NeuralNetwork(object):
 
         self.model = model
         self.name = name
-        # self.train_loader = train_loader
-        # self.test_loader = test_loader
         self.optimizer = optimizer
         self.scheduler = scheduler
 
     def train_model(self, train_loader, test_loader, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
         if verbose:
-            logger.info('Epoch \t Seconds \t LR \t \t Train Loss \t Train Acc')
+            logger.info('Epoch \t Seconds \t Train Loss \t Train Acc')
 
         epoch_args = dict(model=self.model,
                           train_loader=train_loader,
                           optimizer=self.optimizer,
                           scheduler=self.scheduler,
                           adversarial_args=adversarial_args)
-        test_args = dict(model=self.model,
-                         test_loader=test_loader)
 
         for epoch in range(1, num_epochs + 1):
             start_time = time.time()
             train_loss, train_acc = epoch_dictionary[epoch_type](**epoch_args)
             end_time = time.time()
-            lr = self.scheduler.get_lr()[0]
             if verbose:
-                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {lr:.4f} \t {train_loss:.4f} \t {train_acc:.4f}')
+                logger.info(f'{epoch} \t {end_time - start_time:.0f} \t \t {train_loss:.4f} \t {train_acc:.4f}')
                 if epoch % log_interval == 0 or epoch == num_epochs:
-                    test_loss, test_acc = adversarial_test(**test_args)
+                    test_loss, test_acc = self.eval_model(test_loader)
                     logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
-                # self.model.l1_normalize_weights()
-            # print(self.model.features[10].bias)
 
     def train_model_adaptive(self, train_loader, test_loader, logger, epoch_type="Standard", num_epochs=100, log_interval=2, adversarial_args=None, verbose=True):
         if verbose:

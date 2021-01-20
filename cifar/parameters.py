@@ -148,6 +148,9 @@ def get_arguments():
     actions.add_argument("-tr", "--train", action="store_true",
                          help="Train network, default = False"
                          )
+    actions.add_argument("-pr", "--prune", action="store_true",
+                         help="Prune network before saving checkpoint, default = False"
+                         )
     actions.add_argument("-at", "--attack_network", action="store_true",
                          help="Attack network, default = False",
                          )

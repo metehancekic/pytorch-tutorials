@@ -169,7 +169,7 @@ class LowpassLayer(nn.Module):
     def forward(self, x):
 
         o = self.lp(x)
-        o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
+        # o = o + torch.rand_like(o, device=o.device) * 16./255 - 8./255
         o = TSQuantization(o, filters=self.lp.weight, epsilon=self.beta*8.0/255)
         # breakpoint()
 

@@ -4,7 +4,7 @@ import torch.nn as nn
 from .tools import Normalize
 
 
-from .custom_layers import TReLU, Quad
+from .custom_layers import TReLU, Quad, TReLU_with_trainable_bias
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -25,10 +25,49 @@ class VGG_modified(nn.Module):
         self.features = self._make_layers(cfg[vgg_name])
         self.classifier = nn.Linear(512, 10)
 
-    def forward(self, x, alpha):
+    def forward(self, x, alpha=1):
         # out = self.norm(x)
         out = self.conv1(x)
-        out = self.trelu(out, self.conv1.weight, alpha)
+        out = self.trelu(out, self.conv1.weight, alpha=alpha)
+        # out = self.bn1(out)
+        out = self.features(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 64:
+                in_channels = 64
+                continue
+            elif x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        return nn.Sequential(*layers)
+
+
+class VGG_modified2(nn.Module):
+    def __init__(self, vgg_name="VGG11"):
+        super(VGG_modified2, self).__init__()
+        self.norm = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2471, 0.2435, 0.2616])
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64, affine=False)
+        self.trelu = TReLU_with_trainable_bias(64)
+
+        self.features = self._make_layers(cfg[vgg_name])
+        self.classifier = nn.Linear(512, 10)
+
+    def forward(self, x):
+        # out = self.norm(x)
+        out = self.conv1(x)
+        out = self.trelu(out)
         # out = self.bn1(out)
         out = self.features(out)
         out = out.view(out.size(0), -1)

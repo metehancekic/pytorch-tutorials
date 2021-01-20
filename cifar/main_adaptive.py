@@ -58,7 +58,7 @@ def main():
     if device == "cuda":
         model = torch.nn.DataParallel(model)
         cudnn.benchmark = True
-    breakpoint()
+    # breakpoint()
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
     #         print(name)
@@ -112,13 +112,16 @@ def main():
     if args.train:
         NN.train_model_adaptive(train_loader, test_loader, logger, epoch_type=args.tr_epoch_type, num_epochs=args.epochs,
                                 log_interval=args.log_interval, adversarial_args=adversarial_args)
-
+        from ..utils import neural_network_pruner
+        neural_network_pruner(model)
         if not os.path.exists(args.directory + "checkpoints/frontends/"):
             os.makedirs(args.directory + "checkpoints/frontends/")
         NN.save_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
 
     else:
         NN.load_model(checkpoint_dir=args.directory + "checkpoints/frontends/" + checkpoint_name)
+        from ..utils import neural_network_pruner
+        neural_network_pruner(model)
         logger.info("Clean test accuracy")
         test_loss, test_acc = NN.eval_model(test_loader)
         logger.info(f'Test  \t loss: {test_loss:.4f} \t acc: {test_acc:.4f}')
